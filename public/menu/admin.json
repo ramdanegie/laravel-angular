@@ -1,0 +1,44 @@
+[
+    {
+        "name": "Pelayanan",
+        "url": "dashboard-pelayanan",
+        "icon": "ti-dashboard"
+    },
+    {
+        "name": "Pendapatan",
+        "url": "dashboard-pendapatan",
+        "icon": "ti-money"
+    },
+    {
+        "name": "SDM",
+        "url": "dashboard-sdm",
+        "icon": "ti-bar-chart"
+    },
+    {
+        "name": "Persediaan",
+        "url": "dashboard-persediaan",
+        "icon": "ti-pie-chart"
+    },
+    {
+        "name": "Back Office",
+        "url": "dashboard-backoffice",
+        "icon": "ti-server"
+    },
+    {
+        "name": "EMR",
+        "url": "#",
+        "icon": "ti-user",
+        "child": [
+            {
+                "name": "Registrasi",
+                "url": "registrasi",
+                "icon": "ti-archive"
+            },
+            {
+                "name": "Daftar Registrasi",
+                "url": "daftar-pasien",
+                "icon": "ti-archive"
+            }
+        ]
+    }
+]

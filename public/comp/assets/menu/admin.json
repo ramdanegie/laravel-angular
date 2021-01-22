@@ -1,0 +1,31 @@
+[
+    {
+        "name": "Dashboard",
+        "url": "dashboard",
+        "icon": "ti-home"
+       
+    },
+    {
+        
+        "name": "Data Master",
+        "url": "",
+        "icon": "ti-file"
+    },
+    {
+        "name": "Data Transaksi",
+        "url": "registrasi/pasienlama",
+        "icon": "ti-file"
+    },
+    {
+ 
+        "name": "Data Laporan",
+        "url": "",
+        "icon": "ti-file"
+    },
+    {
+      
+        "name": "Setting Login User",
+        "url": "",
+        "icon": "ti-user"
+    }
+]

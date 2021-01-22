@@ -1,0 +1,46 @@
+[
+    {
+        "name": "Dashboard",
+        "url": "#",
+        "icon": "ti-home"
+    },
+    {
+        "name": "Jadwal Dokter",
+        "url": "#",
+        "icon": "ti-file",
+        "child": [
+            {
+                "name": "Pasien Baru",
+                "url": "registrasi/pasien/input",
+                "icon": "ti-archive"
+            },
+            {
+                "name": "Pasien Lama",
+                "url": "registrasi/pasienlama",
+                "icon": "ti-archive"
+            }
+        ]
+    },
+    {
+        "name": "Daftar Pasien",
+        "url": "#",
+        "icon": "ti-file",
+        "child": [
+            {
+                "name": "Daftar Registrasi Pasien",
+                "url": "registrasi/daftarregistrasi",
+                "icon": "ti-file"
+            }
+        ]
+    },
+    {
+        "name": "Data Laporan",
+        "url": "",
+        "icon": "ti-file"
+    },
+    {
+        "name": "Setting Login User",
+        "url": "",
+        "icon": "ti-user"
+    }
+]
