@@ -1,46 +1,44 @@
 [
     {
-        "name": "Dashboard",
-        "url": "#",
-        "icon": "ti-home"
+        "name": "Pelayanan",
+        "url": "dashboard-pelayanan",
+        "icon": "ti-dashboard"
     },
     {
-        "name": "Jadwal Dokter",
+        "name": "Pendapatan",
+        "url": "dashboard-pendapatan",
+        "icon": "ti-money"
+    },
+    {
+        "name": "SDM",
+        "url": "dashboard-sdm",
+        "icon": "ti-bar-chart"
+    },
+    {
+        "name": "Persediaan",
+        "url": "dashboard-persediaan",
+        "icon": "ti-pie-chart"
+    },
+    {
+        "name": "Back Office",
+        "url": "dashboard-backoffice",
+        "icon": "ti-server"
+    },
+    {
+        "name": "EMR",
         "url": "#",
-        "icon": "ti-file",
+        "icon": "ti-user",
         "child": [
             {
-                "name": "Pasien Baru",
-                "url": "registrasi/pasien/input",
+                "name": "Registrasi",
+                "url": "registrasi",
                 "icon": "ti-archive"
             },
             {
-                "name": "Pasien Lama",
-                "url": "registrasi/pasienlama",
+                "name": "Daftar Registrasi",
+                "url": "daftar-pasien",
                 "icon": "ti-archive"
             }
         ]
-    },
-    {
-        "name": "Daftar Pasien",
-        "url": "#",
-        "icon": "ti-file",
-        "child": [
-            {
-                "name": "Daftar Registrasi Pasien",
-                "url": "registrasi/daftarregistrasi",
-                "icon": "ti-file"
-            }
-        ]
-    },
-    {
-        "name": "Data Laporan",
-        "url": "",
-        "icon": "ti-file"
-    },
-    {
-        "name": "Setting Login User",
-        "url": "",
-        "icon": "ti-user"
     }
 ]

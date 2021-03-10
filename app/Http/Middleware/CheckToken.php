@@ -19,9 +19,9 @@ class CheckToken
     public function handle($request, Closure $next)
     {
         $token =  $request->header('X-AUTH-TOKEN');
-//        if(!$token){
-//            $token = $request->input('X-AUTH-TOKEN');
-//        }
+       if(!$token){
+           $token = $request->input('X-AUTH-TOKEN');
+       }
         if($token){
             if(!$this->checkToken($token)){
                 $data = array(

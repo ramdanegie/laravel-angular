@@ -30,7 +30,7 @@ Trait AuthToken{
             return false;
         }
 
-        if (!$jws->verify('JASAMEDIKA', "HS512")) {
+        if (!$jws->verify('TRANSMEDIC', "HS512")) {
           return false;
         }
 

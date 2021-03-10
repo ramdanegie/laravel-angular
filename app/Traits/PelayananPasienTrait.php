@@ -320,4 +320,23 @@ Trait PelayananPasienTrait
     {
         return sha1($pass);
     }
+    protected function getLinkAplicare(){
+        $set = SettingDataFixed::where('namafield', 'urlBridgingAplicare')
+            ->where('kdprofile',$this->getKdProfile())->first();
+        return $set->nilaifield;
+    }
+    protected  function  getKdProfile (){
+        $session = \Session::get('userData');
+        return  User::where('id',$session['id'])->first()->kdprofile;
+    }
+    protected function userSisrute(){
+        $set = SettingDataFixed::where('namafield', 'userIdSisrute')
+            ->where('kdprofile',$this->getKdProfile())->first();
+        return $set->nilaifield;
+    }
+    protected function passwordSisrute(){
+        $set = SettingDataFixed::where('namafield', 'passwordSisrute')
+            ->where('kdprofile',$this->getKdProfile())->first();
+        return $set->nilaifield;
+    }
 }
