@@ -1,0 +1,31 @@
+{
+    "name": "laravel-angular",
+    "version": "1.0.0",
+    "description": "SIMRS",
+    "main": "webpack.mix.js",
+    "directories": {
+        "test": "tests"
+    },
+    "dependencies": {
+        "webpack": "^4.44.1"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "build": "webpack --config prod.config.js",
+        "dev": "webpack-dev-server --open --config webpack/webpack.config.dev.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ramdanegie/laravel-angular.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/ramdanegie/laravel-angular/issues"
+    },
+    "homepage": "https://github.com/ramdanegie/laravel-angular#readme",
+    "devDependencies": {
+        "webpack-cli": "^4.5.0"
+    }
+}

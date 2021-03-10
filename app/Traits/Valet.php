@@ -2,25 +2,27 @@
 namespace App\Traits;
 
 use App\Datatrans\SeqNumber;
+use App\Http\Controllers\SysAdmin\ModulAplikasiController;
 use Carbon\Carbon;
 
 use DB;
+use Illuminate\Http\Request;
 
 Trait Valet
 {
-    protected function generateCodeBySeqTable($objectModel, $atrribute, $length=8, $prefix=''){
+    protected function generateCodeBySeqTable($objectModel, $atrribute, $length=8, $prefix='',$kdProfile){
         DB::beginTransaction();
         try {
             $result = SeqNumber::where('seqnumber', 'LIKE', $prefix.'%')
                 ->where('seqname',$atrribute)
-                ->where('kdprofile',1)
+                ->where('kdprofile',$kdProfile)
                 ->max('seqnumber');
             $prefixLen = strlen($prefix);
             $subPrefix = substr(trim($result),$prefixLen);
             $SN = $prefix.(str_pad((int)$subPrefix+1, $length-$prefixLen, "0", STR_PAD_LEFT));
 
             $newSN = new SeqNumber();
-            $newSN->kdprofile = 1;
+            $newSN->kdprofile = $kdProfile;
             $newSN->seqnumber = $SN;
             $newSN->tgljamseq = date('Y-m-d H:i:s');;
             $newSN->seqname = $atrribute;
@@ -342,7 +344,72 @@ Trait Valet
         $result = $tgl2 . " " . $BulanIndo2[(int)$bulan2-1] . " ". $tahun2;
         return($result);
     }
+//    public static  function buildMenu($array)
+//    {
+//        $li = '<li class="pcoded-hasmenu is-hover" subitem-icon="style1" dropdown-icon="style1">
+//           ';
+//
+//        foreach ($array as $item)
+//        {
+//            $li += ' <a href="javascript:void(0)">
+//            <span class="pcoded-micon"><i class="feather icon-map"></i></span>
+//            <span class="pcoded-mtext">'.$item['name'].'</span>
+//            <span class="pcoded-mcaret"></span>
+//            </a>';
+//
+//            if (!empty($item['children']))
+//            {
+//                $li += '<ul class="pcoded-submenu">';
+//                $li +='<li class="pcoded-hasmenu is-hover" subitem-icon="style1" dropdown-icon="style1">
+//                    <a href="javascript:void(0)">
+//                    <span class="pcoded-micon"><i class="ti-home"></i></span>
+//                    <span class="pcoded-mtext" data-i18n="nav.dash.main">'.$item['name'].'</span>
+//                    <span class="pcoded-mcaret"></span>
+//                    </a>';
+//                $this->buildMenu($item['children']);
+//                $li+= '</ul>';
+//            }
+//            $li +='</li>';
+//        }
+//        $li += '</ul>';
+//    }
+    public static function GenerateNavHTML($nav)
+    {
+        $html = '';
+        foreach($nav as $page)
+        {
+            if(isset($page['children']) && count($page['children'])> 0) {
+                $html .= '<li class="pcoded-hasmenu">
+                            <a href="javascript:void(0)">
+                            <span class="pcoded-micon"><i class="ti-align-left"></i></span>
+                            <span class="pcoded-mtext" data-i18n="nav.dash.main">'.$page['name'].'</span>
+                                        <span class="pcoded-mcaret"></span>
+                            </a>';
+                $html .='<ul class="pcoded-submenu">';
+                $html .= self::GenerateNavHTML($page['children']);
+                $html .='</ul>';
+            }else{
+                $html .='<li class="">
+                            <a href="'.$page['link'].'">
+                            <span class="pcoded-micon"><i class="ti-align-left"></i></span>
+                            <span class="pcoded-mtext" data-i18n="nav.dash.main">'.$page['name'].'</span>
+                            <span class="pcoded-mcaret"></span>
+                            </a>';
+            }
+            $html .= '</li>';
+        }
+        return $html;
+    }
     public static function get_menu() {
+
+       $result = ModulAplikasiController::getMenDB();
+       $menu = self::GenerateNavHTML($result);
+       return $menu;
+   
+    /*
+     * menu json dibawah
+     */
+
         $result = file_get_contents(public_path()."/menu/".$_SESSION['role'].".json");
         $result = json_decode($result);
         $menu       = '';
@@ -350,13 +417,7 @@ Trait Valet
         if(count( $result) > 0){
             foreach ($result as $parent){
                 $li_parent='';
-                if(isset($parent->child)){
-                    $result_child = $parent->child;
-                }else{
-                    $result_child =[];
-                }
-
-                if(count($result_child)>0){
+                if(isset($parent->child) && count($parent->child)>0){
                     $li_parent='
 					<li class="pcoded-hasmenu">
                         <a href="javascript:void(0)">
@@ -365,7 +426,7 @@ Trait Valet
                                     <span class="pcoded-mcaret"></span>
                         </a>';
                     $menu_child='<ul class="pcoded-submenu">';
-                    foreach ($result_child as $child){
+                    foreach ($parent->child as $child){
                         $menu_child = $menu_child.
                             '<li>
                                 <a href="'.$child->url.'">
@@ -418,5 +479,121 @@ Trait Valet
             }
         }
         return $this->tempData;
+    }
+    public function getCurrentUserID(){
+        return $_SESSION['pegawai']->id;
+    }
+    public function getDataKdProfile(Request $request){
+        return $_SESSION['kdProfile'];
+//        $dataLogin = $request->all();
+//        $idUser = $dataLogin['userData']['id'];
+//        $data = LoginUser::where('id', $idUser)->first();
+//        $idKdProfile = (int)$data->kdprofile;
+//        $Query = DB::table('profile_m')
+//            ->where('id', '=', $idKdProfile)
+//            ->first();
+//        $Profile = $Query;
+//        if(!empty($Profile)){
+//            return (int)$Profile->id;
+//        }else{
+//            return null;
+//        }
+    }
+    protected function sendBridgingCurl($headers , $dataJsonSend = null, $url,$method,$tipe = null){
+        $curl = curl_init();
+        if($dataJsonSend == null){
+            curl_setopt_array($curl, array(
+                CURLOPT_URL=> $url,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => "",
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 60,
+                CURLOPT_SSL_VERIFYHOST => 0,
+                CURLOPT_SSL_VERIFYPEER => 0,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => $method,
+                CURLOPT_HTTPHEADER => $headers
+            ));
+        }else{
+            curl_setopt_array($curl, array(
+                CURLOPT_URL=> $url,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => "",
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 60,
+                CURLOPT_SSL_VERIFYHOST => 0,
+                CURLOPT_SSL_VERIFYPEER => 0,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => $method,
+                CURLOPT_POSTFIELDS => $dataJsonSend,
+                CURLOPT_HTTPHEADER => $headers
+            ));
+        }
+
+        $response = curl_exec($curl);
+        $err = curl_error($curl);
+
+        curl_close($curl);
+
+        if ($err) {
+            // return $this->setStatusCode(500)->respond([], $err);
+            $result = "Terjadi Kesalahan #:" . $err;
+        } else {
+//            dd($tipe);
+            if($tipe != null){
+//                $json = preg_replace("!\t!", "", $response);
+//                $response2 = preg_replace("/(<\/?)(\w+):([^>]*>)/", "$1$2$3", $response);
+//                $xml = new \SimpleXMLElement($response2);
+//                $body = $xml->xpath('//SBody')[0];
+//                $result = json_decode(json_encode((array)$body), TRUE);
+//                $json = preg_replace('!\\r?\\n!', "", $response);
+                $result = json_decode($response);
+            }else{
+                $result = json_decode($response);
+            }
+        }
+        return $result ;
+    }
+
+    public static function getRomawi($angka)
+    {
+        $hsl = "";
+        if ($angka == 1) {
+            $hsl='I';
+        };
+        if ($angka == 2) {
+            $hsl='II';
+        };
+        if ($angka == 3) {
+            $hsl='III';
+        };
+        if ($angka == 4) {
+            $hsl='IV';
+        };
+        if ($angka == 5) {
+            $hsl='V';
+        };
+        if ($angka == 6) {
+            $hsl='VI';
+        };
+        if ($angka == 7) {
+            $hsl='VII';
+        };
+        if ($angka == 8) {
+            $hsl='VIII';
+        };
+        if ($angka == 9) {
+            $hsl='IX';
+        };
+        if ($angka == 10) {
+            $hsl='X';
+        };
+        if ($angka == 11) {
+            $hsl='XI';
+        };
+        if ($angka == 12) {
+            $hsl='XII';
+        };
+        return ($hsl);
     }
 }

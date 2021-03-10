@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Datatrans\EECG;
 use App\Datatrans\PasienDaftar;
 use App\Datatrans\Pegawai;
+use App\Http\Controllers\SysAdmin\ModulAplikasiController;
 use App\User;
 use App\Traits\Valet;
 use Carbon\Carbon;
@@ -26,6 +27,7 @@ date_default_timezone_set('Asia/Jakarta');
 class MainController extends ApiController
 {
     use Valet;
+
     public function __construct()
     {
         parent::__construct($skip_authentication = true);
@@ -37,64 +39,64 @@ class MainController extends ApiController
         $request = $this->validate_input($request);
         $compact = [];
         $kdProfile = $_SESSION['kdProfile'];
-        if($request['role'] == 'admin'){
+        if ($request['role'] == 'admin') {
             switch ($request["pages"]) {
                 case 'dashboard':
 //                    array_push($compact,"listdiagnosa","map","kddiagnosa","umur","tglawal","tglakhir");
                     break;
                 case 'jadwal-dokter':
-                    $dokterId ='';
+                    $dokterId = '';
                     $ruanganId = '';
 
-                    if (!isset($r->ruanganId) && !isset($r->dokterId) ){
+                    if (!isset($r->ruanganId) && !isset($r->dokterId)) {
                         $dokterId = $_SESSION['pegawai']->id;
                         return redirect()->route("show_page",
                             ["role" => $_SESSION['role'],
                                 "pages" => $r->pages,
-                                "dokterId" =>  $dokterId,
+                                "dokterId" => $dokterId,
                                 "ruanganId" => $ruanganId]);
                     } else {
                         $dokterId = $r->dokterId;
                         $ruanganId = $r->ruanganId;
                     }
-                    if($dokterId == 1){
+                    if ($dokterId == 1) {
                         $dokterId = '';
                     }
-                    $kdJeniPegawaiDokter = (int) $this->settingDataFixed('KdJenisPegawaiDokter',$kdProfile);
+                    $kdJeniPegawaiDokter = (int)$this->settingDataFixed('KdJenisPegawaiDokter', $kdProfile);
                     $dokter = \DB::table('pegawai_m')
-                        ->select('id','namalengkap')
+                        ->select('id', 'namalengkap')
                         ->where('statusenabled', true)
                         ->where('kdprofile', $kdProfile)
-                        ->where('objectjenispegawaifk',$kdJeniPegawaiDokter)
+                        ->where('objectjenispegawaifk', $kdJeniPegawaiDokter)
                         ->orderBy('namalengkap')
                         ->get();
 
 
-                    $deptJalan = explode (',',$this->settingDataFixed('kdDepartemenRawatJalanFix',$kdProfile));
+                    $deptJalan = explode(',', $this->settingDataFixed('kdDepartemenRawatJalanFix', $kdProfile));
                     $kdDepartemenRawatJalan = [];
-                    foreach ($deptJalan as $item){
-                        $kdDepartemenRawatJalan []=  (int)$item;
+                    foreach ($deptJalan as $item) {
+                        $kdDepartemenRawatJalan [] = (int)$item;
                     }
-                    $deptInap = explode (',',$this->settingDataFixed('kdDepartemenRawatInapFix',$kdProfile));
+                    $deptInap = explode(',', $this->settingDataFixed('kdDepartemenRawatInapFix', $kdProfile));
                     $kdDeptInap = [];
-                    foreach ($kdDeptInap as $item){
-                        $kdDeptInap []=  (int)$item;
+                    foreach ($kdDeptInap as $item) {
+                        $kdDeptInap [] = (int)$item;
                     }
-                    $deptPatok = array_merge($kdDeptInap,$kdDepartemenRawatJalan);
+                    $deptPatok = array_merge($kdDeptInap, $kdDepartemenRawatJalan);
 
                     $ruangan = \DB::table('ruangan_m as ru')
-                        ->select('ru.id','ru.namaruangan','ru.objectdepartemenfk')
+                        ->select('ru.id', 'ru.namaruangan', 'ru.objectdepartemenfk')
                         ->where('ru.statusenabled', true)
                         ->wherein('ru.objectdepartemenfk', $kdDepartemenRawatJalan)
-                        ->where('ru.kdprofile',(int)$kdProfile)
+                        ->where('ru.kdprofile', (int)$kdProfile)
                         ->orderBy('ru.namaruangan')
                         ->get();
 
-                    if ($dokterId !='')  {
-                        $dokterId = ' and pg.id='. $dokterId;
+                    if ($dokterId != '') {
+                        $dokterId = ' and pg.id=' . $dokterId;
                     }
-                    if ($ruanganId !='')  {
-                        $ruanganId = ' and ru.id='.$ruanganId;
+                    if ($ruanganId != '') {
+                        $ruanganId = ' and ru.id=' . $ruanganId;
                     }
 
                     $data = collect(DB::select("
@@ -122,35 +124,35 @@ class MainController extends ApiController
                         pg.namalengkap ASC"));
 //                    dd($data->groupBy('namalengkap'));
 //
-                    array_push($compact,'data','r','ruangan','dokter');
+                    array_push($compact, 'data', 'r', 'ruangan', 'dokter');
                     break;
                 case 'daftar-pasien-dokter':
-                    $kdJeniPegawaiDokter = (int) $this->settingDataFixed('KdJenisPegawaiDokter',$kdProfile);
+                    $kdJeniPegawaiDokter = (int)$this->settingDataFixed('KdJenisPegawaiDokter', $kdProfile);
                     $dokter = \DB::table('pegawai_m')
-                        ->select('id','namalengkap')
+                        ->select('id', 'namalengkap')
                         ->where('statusenabled', true)
                         ->where('kdprofile', $kdProfile)
-                        ->where('objectjenispegawaifk',$kdJeniPegawaiDokter)
+                        ->where('objectjenispegawaifk', $kdJeniPegawaiDokter)
                         ->orderBy('namalengkap')
                         ->get();
 
-                    $deptJalan = explode (',',$this->settingDataFixed('kdDepartemenRawatJalanFix',$kdProfile));
+                    $deptJalan = explode(',', $this->settingDataFixed('kdDepartemenRawatJalanFix', $kdProfile));
                     $kdDepartemenRawatJalan = [];
-                    foreach ($deptJalan as $item){
-                        $kdDepartemenRawatJalan []=  (int)$item;
+                    foreach ($deptJalan as $item) {
+                        $kdDepartemenRawatJalan [] = (int)$item;
                     }
-                    $deptInap = explode (',',$this->settingDataFixed('kdDepartemenRanapFix',$kdProfile));
+                    $deptInap = explode(',', $this->settingDataFixed('kdDepartemenRanapFix', $kdProfile));
                     $kdDeptInap = [];
-                    foreach ($deptInap as $item){
-                        $kdDeptInap []=  (int)$item;
+                    foreach ($deptInap as $item) {
+                        $kdDeptInap [] = (int)$item;
                     }
                     $deptPatok = $kdDepartemenRawatJalan;
 
                     $ruangan = \DB::table('ruangan_m as ru')
-                        ->select('ru.id','ru.namaruangan','ru.objectdepartemenfk')
+                        ->select('ru.id', 'ru.namaruangan', 'ru.objectdepartemenfk')
                         ->where('ru.statusenabled', true)
                         ->wherein('ru.objectdepartemenfk', $deptPatok)
-                        ->where('ru.kdprofile',(int)$kdProfile)
+                        ->where('ru.kdprofile', (int)$kdProfile)
                         ->orderBy('ru.namaruangan')
                         ->get();
 
@@ -159,89 +161,88 @@ class MainController extends ApiController
                     $now = date('Y-m-d');
                     if (isset($validatedata["src_tglAwal"])) {
                         $tempWhere[0] = DB::raw("pd.tglregistrasi >= '$validatedata[src_tglAwal]'");
-                    }else{
-                        $r['src_tglAwal'] =$now;
+                    } else {
+                        $r['src_tglAwal'] = $now;
                         $tempWhere[0] = DB::raw("pd.tglregistrasi >= '$now 00:00'");
                     }
                     if (isset($validatedata["scr_tglAkhir"])) {
                         $tempWhere[1] = DB::raw("pd.tglregistrasi <= '$validatedata[scr_tglAkhir]'");
-                    }else{
-                        $r['src_tglAkhir'] =$now;
+                    } else {
+                        $r['src_tglAkhir'] = $now;
                         $tempWhere[1] = DB::raw("pd.tglregistrasi <= '$now 23:59'");
                     }
                     if (isset($validatedata["src_nama"])) {
                         $tempWhere[2] = DB::raw("ps.namapasien iLIKE '%$validatedata[src_nama]%'");
                     }
                     if (isset($validatedata["src_nocm"])) {
-                        $tempWhere[3] = DB::raw("(ps.nocm iLIKE '%$validatedata[src_nocm]%' or 
+                        $tempWhere[3] = DB::raw("(ps.nocm iLIKE '%$validatedata[src_nocm]%' or
                         ps.namapasien iLIKE '%$validatedata[src_nocm]%')");
                     }
                     if (isset($validatedata["src_idRuangan"])) {
                         $tempWhere[4] = DB::raw("ru.id = $validatedata[src_idRuangan]");
                     }
 //                    dd($validatedata["src_idDokter"]);
-                    if (isset($validatedata["src_idDokter"]) && $validatedata["src_idDokter"]!='1') {
+                    if (isset($validatedata["src_idDokter"]) && $validatedata["src_idDokter"] != '1') {
                         $tempWhere[5] = DB::raw("pg.id = $validatedata[src_idDokter]");
-                    }else if (isset($validatedata["src_idDokter"]) && $validatedata["src_idDokter"]=='1'){
-                        $r['src_idDokter'] ='';
-                    }else {
-                        $r['src_idDokter'] =$_SESSION['pegawai']->id;
+                    } else if (isset($validatedata["src_idDokter"]) && $validatedata["src_idDokter"] == '1') {
+                        $r['src_idDokter'] = '';
+                    } else {
+                        $r['src_idDokter'] = $_SESSION['pegawai']->id;
                         $tempWhere[5] = DB::raw("pg.id = $r[src_idDokter]");
                     }
 
                     $opr = "and";
-                    $where = "pd.kdprofile =".$kdProfile;
+                    $where = "pd.kdprofile =" . $kdProfile;
                     if (count($tempWhere) > 0) {
-                        $where .= " AND ".implode(" ".$opr." ",$tempWhere);
+                        $where .= " AND " . implode(" " . $opr . " ", $tempWhere);
                     }
 //                    dd($where);
 
                     $data = \DB::table('antrianpasiendiperiksa_t as apd')
-                        ->join('pasiendaftar_t as pd','pd.norec','=','apd.noregistrasifk')
-                        ->join('pasien_m as ps', 'ps.id','=','pd.nocmfk')
-                        ->leftjoin('alamat_m as alm', 'ps.id','=','alm.nocmfk')
-                        ->leftjoin('jeniskelamin_m as jk','jk.id','=','ps.objectjeniskelaminfk')
-                        ->join('kelas_m as kls','kls.id','=','pd.objectkelasfk')
-                        ->join('ruangan_m as ru','ru.id','=','apd.objectruanganfk')
-                        ->leftJoin('pegawai_m as pg','pg.id','=','apd.objectpegawaifk')
-                        ->leftJoin('pegawai_m as pg2','pg2.id','=','apd.residencefk')
-                        ->Join('kelompokpasien_m as kp','kp.id','=','pd.objectkelompokpasienlastfk')
-                        ->leftjoin('rekanan_m as rek','rek.id','=','pd.objectrekananfk')
-                        ->leftjoin('antrianpasienregistrasi_t as apr', function ($join){
-                            $join->on('apr.noreservasi','=','pd.statusschedule');
-                            $join->on('apr.nocmfk','=','pd.nocmfk');
+                        ->join('pasiendaftar_t as pd', 'pd.norec', '=', 'apd.noregistrasifk')
+                        ->join('pasien_m as ps', 'ps.id', '=', 'pd.nocmfk')
+                        ->leftjoin('alamat_m as alm', 'ps.id', '=', 'alm.nocmfk')
+                        ->leftjoin('jeniskelamin_m as jk', 'jk.id', '=', 'ps.objectjeniskelaminfk')
+                        ->join('kelas_m as kls', 'kls.id', '=', 'pd.objectkelasfk')
+                        ->join('ruangan_m as ru', 'ru.id', '=', 'apd.objectruanganfk')
+                        ->leftJoin('pegawai_m as pg', 'pg.id', '=', 'apd.objectpegawaifk')
+                        ->leftJoin('pegawai_m as pg2', 'pg2.id', '=', 'apd.residencefk')
+                        ->Join('kelompokpasien_m as kp', 'kp.id', '=', 'pd.objectkelompokpasienlastfk')
+                        ->leftjoin('rekanan_m as rek', 'rek.id', '=', 'pd.objectrekananfk')
+                        ->leftjoin('antrianpasienregistrasi_t as apr', function ($join) {
+                            $join->on('apr.noreservasi', '=', 'pd.statusschedule');
+                            $join->on('apr.nocmfk', '=', 'pd.nocmfk');
                         })
                         ->leftjoin('pemakaianasuransi_t as pa', 'pa.noregistrasifk', '=', 'pd.norec')
                         ->leftjoin('asuransipasien_m as asu', 'pa.objectasuransipasienfk', '=', 'asu.id')
-                        ->leftjoin('kelas_m as klstg','klstg.id','=','asu.objectkelasdijaminfk')
-                        ->select('pd.tglregistrasi','ps.nocm','pd.noregistrasi','ps.namapasien','ps.tgllahir','jk.jeniskelamin','apd.objectruanganfk','ru.namaruangan','kls.id as idkelas','kls.namakelas',
-                            'kp.kelompokpasien','rek.namarekanan','apd.objectpegawaifk','pg.namalengkap as namadokter','pd.norec as norec_pd','apd.norec as norec_apd','apd.objectasalrujukanfk',
-                            'apd.tgldipanggildokter','apd.statuspasien as statuspanggil','pd.statuspasien','apd.tgldipanggildokter','apd.tgldipanggilsuster','apr.noreservasi','apd.noantrian',
-                            'apr.tanggalreservasi',  'alm.alamatlengkap','klstg.namakelas as kelasdijamin', 'apd.tglselesaiperiksa',
-                            'apd.norec as norec_apd','ps.objectjeniskelaminfk as jkid',
-                            'ru.ipaddress','ps.iskompleks','apd.residencefk','pg2.namalengkap as residence'
-                          ,DB::raw("case when apd.ispelayananpasien is null then 'false' else 'true' end as statuslayanan,
+                        ->leftjoin('kelas_m as klstg', 'klstg.id', '=', 'asu.objectkelasdijaminfk')
+                        ->select('pd.tglregistrasi', 'ps.nocm', 'pd.noregistrasi', 'ps.namapasien', 'ps.tgllahir', 'jk.jeniskelamin', 'apd.objectruanganfk', 'ru.namaruangan', 'kls.id as idkelas', 'kls.namakelas',
+                            'kp.kelompokpasien', 'rek.namarekanan', 'apd.objectpegawaifk', 'pg.namalengkap as namadokter', 'pd.norec as norec_pd', 'apd.norec as norec_apd', 'apd.objectasalrujukanfk',
+                            'apd.tgldipanggildokter', 'apd.statuspasien as statuspanggil', 'pd.statuspasien', 'apd.tgldipanggildokter', 'apd.tgldipanggilsuster', 'apr.noreservasi', 'apd.noantrian',
+                            'apr.tanggalreservasi', 'alm.alamatlengkap', 'klstg.namakelas as kelasdijamin', 'apd.tglselesaiperiksa',
+                            'apd.norec as norec_apd', 'ps.objectjeniskelaminfk as jkid',
+                            'ru.ipaddress', 'ps.iskompleks', 'apd.residencefk', 'pg2.namalengkap as residence'
+                            , DB::raw("case when apd.ispelayananpasien is null then 'false' else 'true' end as statuslayanan,
                                    EXTRACT(YEAR FROM AGE(pd.tglregistrasi, ps.tgllahir)) || ' Thn '
                         || EXTRACT(MONTH FROM AGE(pd.tglregistrasi, ps.tgllahir)) || ' Bln '
                         || EXTRACT(DAY FROM AGE(pd.tglregistrasi, ps.tgllahir)) || ' Hr' AS umur"))
-                        ->where('pd.statusenabled',true)
-                        ->where('ps.statusenabled',true)
+                        ->where('pd.statusenabled', true)
+                        ->where('ps.statusenabled', true)
                         ->whereRaw($where)
-                        ->whereIn('ru.objectdepartemenfk',[18,24,28,26,30,34])
+                        ->whereIn('ru.objectdepartemenfk', [18, 24, 28, 26, 30, 34])
 //                        ->whereIn('ru.objectdepartemenfk',$deptPatok)
-                        ->orderBy('apd.noantrian')
-                        ;
-                   $count = $data->get();
-                   $data = $data->paginate(10);
+                        ->orderBy('apd.noantrian');
+                    $count = $data->get();
+                    $data = $data->paginate(10);
 //                    dd($count);
                     $norecaPd = '';
-                    foreach ($data as $ob){
-                        $norecaPd = $norecaPd.",'".$ob->norec_apd . "'";
+                    foreach ($data as $ob) {
+                        $norecaPd = $norecaPd . ",'" . $ob->norec_apd . "'";
                         $ob->kddiagnosa = [];
                     }
-                    $norecaPd = substr($norecaPd, 1, strlen($norecaPd)-1);
+                    $norecaPd = substr($norecaPd, 1, strlen($norecaPd) - 1);
                     $diagnosa = [];
-                    if($norecaPd!= ''){
+                    if ($norecaPd != '') {
                         $diagnosa = DB::select(DB::raw("
                            select dg.kddiagnosa,ddp.noregistrasifk as norec_apd
                            from detaildiagnosapasien_t as ddp
@@ -249,11 +250,11 @@ class MainController extends ApiController
                            left join diagnosa_m as dg on ddp.objectdiagnosafk=dg.id
                            where ddp.noregistrasifk in ($norecaPd) "));
                         $i = 0;
-                        foreach ($data as $h){
-                            $data[$i]->kddiagnosa =[];
-                            foreach ($diagnosa as $d){
-                                if($data[$i]->norec_apd == $d->norec_apd){
-                                    $data[$i]->kddiagnosa[] =   $d->kddiagnosa;
+                        foreach ($data as $h) {
+                            $data[$i]->kddiagnosa = [];
+                            foreach ($diagnosa as $d) {
+                                if ($data[$i]->norec_apd == $d->norec_apd) {
+                                    $data[$i]->kddiagnosa[] = $d->kddiagnosa;
                                 }
                             }
                             $i++;
@@ -263,13 +264,13 @@ class MainController extends ApiController
                      * hitung terlayani
                      */
                     $norecaPd2 = '';
-                    foreach ($count as $ob){
-                        $norecaPd2 = $norecaPd2.",'".$ob->norec_apd . "'";
+                    foreach ($count as $ob) {
+                        $norecaPd2 = $norecaPd2 . ",'" . $ob->norec_apd . "'";
                         $ob->kddiagnosa = [];
                     }
-                    $norecaPd2 = substr($norecaPd2, 1, strlen($norecaPd2)-1);
+                    $norecaPd2 = substr($norecaPd2, 1, strlen($norecaPd2) - 1);
                     $terlayani = 0;
-                    if($norecaPd2!= ''){
+                    if ($norecaPd2 != '') {
                         $diagnosa2 = DB::select(DB::raw("
                            select dg.kddiagnosa,ddp.noregistrasifk as norec_apd
                            from detaildiagnosapasien_t as ddp
@@ -278,13 +279,13 @@ class MainController extends ApiController
                            where ddp.noregistrasifk in ($norecaPd2) "));
                         $i = 0;
                         $terlayani = 0;
-                        foreach ($count as $h){
-                            $count[$i]->kddiagnosa =[];
-                            foreach ($diagnosa2 as $d){
-                                if($count[$i]->norec_apd == $d->norec_apd){
-                                    $count[$i]->kddiagnosa[] =   $d->kddiagnosa;
-                                    if(count($count[$i]->kddiagnosa) == 1){
-                                        $terlayani = $terlayani+1;
+                        foreach ($count as $h) {
+                            $count[$i]->kddiagnosa = [];
+                            foreach ($diagnosa2 as $d) {
+                                if ($count[$i]->norec_apd == $d->norec_apd) {
+                                    $count[$i]->kddiagnosa[] = $d->kddiagnosa;
+                                    if (count($count[$i]->kddiagnosa) == 1) {
+                                        $terlayani = $terlayani + 1;
                                     }
                                 }
                             }
@@ -294,28 +295,28 @@ class MainController extends ApiController
 //                    dd($data);
                     $total['total'] = $count->count();
                     $total['terlayani'] = $terlayani;
-                    $total['belumterlayani'] =  $count->count() -$terlayani ;
+                    $total['belumterlayani'] = $count->count() - $terlayani;
                     /*
                      * end hitung
                      */
 //                    dd($total);
-                    array_push($compact,'data','r','ruangan','dokter','total');
+                    array_push($compact, 'data', 'r', 'ruangan', 'dokter', 'total');
                     break;
                 case 'detail-billing':
                     $pasien = \DB::table('pasiendaftar_t as pd')
-                        ->leftjoin ('pasien_m as ps','ps.id','=','pd.nocmfk')
-                        ->leftjoin ('ruangan_m as ru','ru.id','=','pd.objectruanganlastfk')
-                        ->leftjoin ('kelas_m as kls','kls.id','=','pd.objectkelasfk')
-                        ->leftjoin ('kelompokpasien_m as kps','kps.id','=','pd.objectkelompokpasienlastfk')
-                        ->leftjoin ('rekanan_m as rk','rk.id','=','pd.objectrekananfk')
-                        ->leftjoin ('jeniskelamin_m as jk','jk.id','=','ps.objectjeniskelaminfk')
-                        ->leftjoin ('alamat_m as alm','alm.id','=','pd.nocmfk')
-                        ->leftjoin ('agama_m as agm','agm.id','=','ps.objectagamafk')
-                        ->select('pd.norec as norec_pd','pd.noregistrasi','pd.tglregistrasi','ps.nocm','ps.namapasien',
-                            'ps.tgllahir','ps.namakeluarga','ru.namaruangan','kls.namakelas','kps.kelompokpasien','rk.namarekanan','alm.alamatlengkap',
-                            'jk.jeniskelamin','agm.agama','ps.nohp','pd.statuspasien','pd.tglpulang')
+                        ->leftjoin('pasien_m as ps', 'ps.id', '=', 'pd.nocmfk')
+                        ->leftjoin('ruangan_m as ru', 'ru.id', '=', 'pd.objectruanganlastfk')
+                        ->leftjoin('kelas_m as kls', 'kls.id', '=', 'pd.objectkelasfk')
+                        ->leftjoin('kelompokpasien_m as kps', 'kps.id', '=', 'pd.objectkelompokpasienlastfk')
+                        ->leftjoin('rekanan_m as rk', 'rk.id', '=', 'pd.objectrekananfk')
+                        ->leftjoin('jeniskelamin_m as jk', 'jk.id', '=', 'ps.objectjeniskelaminfk')
+                        ->leftjoin('alamat_m as alm', 'alm.id', '=', 'pd.nocmfk')
+                        ->leftjoin('agama_m as agm', 'agm.id', '=', 'ps.objectagamafk')
+                        ->select('pd.norec as norec_pd', 'pd.noregistrasi', 'pd.tglregistrasi', 'ps.nocm', 'ps.namapasien',
+                            'ps.tgllahir', 'ps.namakeluarga', 'ru.namaruangan', 'kls.namakelas', 'kps.kelompokpasien', 'rk.namarekanan', 'alm.alamatlengkap',
+                            'jk.jeniskelamin', 'agm.agama', 'ps.nohp', 'pd.statuspasien', 'pd.tglpulang')
                         ->where('pd.norec', $r['norec_pd'])
-                        ->where('pd.kdprofile',   $_SESSION['kdProfile'])
+                        ->where('pd.kdprofile', $_SESSION['kdProfile'])
                         ->first();
                     $pelayanan = \DB::table('pasiendaftar_t as pd')
                         ->join('antrianpasiendiperiksa_t as apd', 'apd.noregistrasifk', '=', 'pd.norec')
@@ -329,41 +330,41 @@ class MainController extends ApiController
                         ->select('pp.norec', 'pp.tglpelayanan', 'pp.rke', 'pr.id as prid', 'pr.namaproduk', 'pp.jumlah', 'kl.id as klid', 'kl.namakelas',
                             'ru.id as ruid', 'ru.namaruangan', 'pp.produkfk', 'pp.hargajual', 'pp.hargadiscount', 'sp.nostruk', 'sp.tglstruk', 'apd.norec as norec_apd',
                             'sbm.nosbm', 'sp.norec as norec_sp', 'pp.jasa', 'pd.nocmfk',
-                            'pd.nostruklastfk','pd.noregistrasi',
+                            'pd.nostruklastfk', 'pd.noregistrasi',
                             'pd.tglregistrasi', 'pd.norec as norec_pd', 'pd.tglpulang',
                             'pd.objectrekananfk as rekananid',
-                            'pp.jasa',  'sp.totalharusdibayar', 'sp.totalprekanan',
-                            'sp.totalbiayatambahan','pp.aturanpakai','pp.iscito','pd.statuspasien','pp.isparamedis','pp.strukresepfk'
+                            'pp.jasa', 'sp.totalharusdibayar', 'sp.totalprekanan',
+                            'sp.totalbiayatambahan', 'pp.aturanpakai', 'pp.iscito', 'pd.statuspasien', 'pp.isparamedis', 'pp.strukresepfk'
                         )
                         ->where('pd.kdprofile', $_SESSION['kdProfile'])
                         ->where('pd.norec', $r['norec_pd'])
                         ->get();
 
-                    $noregistrasi= PasienDaftar::where('norec', $r['norec_pd'])->first();
-                    $produkDeposit =  $this->settingDataFixed( 'idProdukDeposit',$kdProfile);
+                    $noregistrasi = PasienDaftar::where('norec', $r['norec_pd'])->first();
+                    $produkDeposit = $this->settingDataFixed('idProdukDeposit', $kdProfile);
                     if (count($pelayanan) > 0) {
                         $details = array();
                         foreach ($pelayanan as $value) {
-                            if($value->prid !=$produkDeposit){
+                            if ($value->prid != $produkDeposit) {
                                 $jasa = 0;
                                 if (isset($value->jasa) && $value->jasa != "" && $value->jasa != null) {
-                                    $jasa =(float) $value->jasa;
+                                    $jasa = (float)$value->jasa;
                                 }
                                 $jaspel = DB::table('pelayananpasiendetail_t')
-                                    ->where('pelayananpasien',$value->norec)
-                                    ->where('komponenhargafk',94)
+                                    ->where('pelayananpasien', $value->norec)
+                                    ->where('komponenhargafk', 94)
                                     ->first();
-                                if(!empty($jaspel)){
+                                if (!empty($jaspel)) {
                                     $jasaD = 0;
                                     if (isset($jaspel->jasa) && $jaspel->jasa != "" && $jaspel->jasa != null) {
-                                        $jasaD =(float) $jaspel->jasa;
+                                        $jasaD = (float)$jaspel->jasa;
                                     }
                                     $hargaD = (float)$jaspel->hargajual;
                                     $diskonD = (float)$jaspel->hargadiscount;
-                                    $jasapelayanan =  (($hargaD - $diskonD) * $jaspel->jumlah) + $jasaD;
+                                    $jasapelayanan = (($hargaD - $diskonD) * $jaspel->jumlah) + $jasaD;
 //                                    dd($jasapelayanan);
-                                }else{
-                                    $jasapelayanan= 0;
+                                } else {
+                                    $jasapelayanan = 0;
                                 }
                                 $harga = (float)$value->hargajual;
                                 $diskon = (float)$value->hargadiscount;
@@ -377,7 +378,7 @@ class MainController extends ApiController
                                     'harga' => $harga,
                                     'diskon' => $diskon,
                                     'total' => (($harga - $diskon) * $value->jumlah) + $jasa,
-                                    'strukfk' => $value->nostruk ,
+                                    'strukfk' => $value->nostruk,
                                     'sbmfk' => $value->nosbm,
                                     'pgid' => '',
                                     'ruid' => $value->ruid,
@@ -391,92 +392,91 @@ class MainController extends ApiController
                                     'iscito' => $value->iscito,
                                     'isparamedis' => $value->isparamedis,
                                     'strukresepfk' => $value->strukresepfk,
-                                    'jasapelayanan' =>$jasapelayanan
+                                    'jasapelayanan' => $jasapelayanan
                                 );
 
                                 $details[] = $detail;
                             }
-                         }
+                        }
                     }
 
-                  $x =0;
-                  foreach ($details as $det){
-                      if ($details[$x]['strukresepfk'] != null) {
-                          $details[$x]['ruanganTindakan'] = 'Pemakaian Obat & Alkes ' . $details[$x]['ruanganTindakan'];
-                      }
-                      $x++;
-                  }
+                    $x = 0;
+                    foreach ($details as $det) {
+                        if ($details[$x]['strukresepfk'] != null) {
+                            $details[$x]['ruanganTindakan'] = 'Pemakaian Obat & Alkes ' . $details[$x]['ruanganTindakan'];
+                        }
+                        $x++;
+                    }
 //                  dd($details);
 
-                   $sama = false;
-                   $groupingArr = [];
-                   for ($i = 0; $i <  count($details); $i++) {
-                       $sama = false;
-                         for ($x = 0; $x <  count($groupingArr); $x++) {
-                           if ($details[$i]['ruanganTindakan'] == $groupingArr[$x]['ruanganTindakan']) {
-                             $sama = true;
-                             $groupingArr[$x]['total']= (float)$details[$i]['total'] + (float)$groupingArr[$x]['total'];
-                             $groupingArr[$x]['jasapelayanan']= (float)$details[$i]['jasapelayanan'] + (float)$groupingArr[$x]['jasapelayanan'];
-                           }
-                         }
-                         if ($sama == false) {
-                           $groupingArr[] = array(
-                               'ruanganTindakan' =>$details[$i]['ruanganTindakan'],
-                               'total' => $details[$i]['total'],
-                               'jasapelayanan' => $details[$i]['jasapelayanan'],
-                           );
-                         }
-                      }
+                    $sama = false;
+                    $groupingArr = [];
+                    for ($i = 0; $i < count($details); $i++) {
+                        $sama = false;
+                        for ($x = 0; $x < count($groupingArr); $x++) {
+                            if ($details[$i]['ruanganTindakan'] == $groupingArr[$x]['ruanganTindakan']) {
+                                $sama = true;
+                                $groupingArr[$x]['total'] = (float)$details[$i]['total'] + (float)$groupingArr[$x]['total'];
+                                $groupingArr[$x]['jasapelayanan'] = (float)$details[$i]['jasapelayanan'] + (float)$groupingArr[$x]['jasapelayanan'];
+                            }
+                        }
+                        if ($sama == false) {
+                            $groupingArr[] = array(
+                                'ruanganTindakan' => $details[$i]['ruanganTindakan'],
+                                'total' => $details[$i]['total'],
+                                'jasapelayanan' => $details[$i]['jasapelayanan'],
+                            );
+                        }
+                    }
                     $res = array(
-                        'pasien' =>$pasien,
+                        'pasien' => $pasien,
                         'details' => $groupingArr,
-                        'deposit' =>  $this->getDepositPasien($noregistrasi),
-                        'totalklaim' =>  $this->getTotalKlaim($noregistrasi,$kdProfile),
-                        'bayar' =>  $this->getTotolBayar($noregistrasi,$kdProfile),
+                        'deposit' => $this->getDepositPasien($noregistrasi),
+                        'totalklaim' => $this->getTotalKlaim($noregistrasi, $kdProfile),
+                        'bayar' => $this->getTotolBayar($noregistrasi, $kdProfile),
                     );
 //                    dd($res);
-                    array_push($compact,'res','r');
+                    array_push($compact, 'res', 'r');
                     break;
-
                 case 'detail-registrasi':
-                    $res =[];
+                    $res = [];
                     $pasien = \DB::table('pasiendaftar_t as pd')
-                        ->leftjoin ('pasien_m as ps','ps.id','=','pd.nocmfk')
-                        ->leftjoin ('ruangan_m as ru','ru.id','=','pd.objectruanganlastfk')
-                        ->leftjoin ('kelas_m as kls','kls.id','=','pd.objectkelasfk')
-                        ->leftjoin ('kelompokpasien_m as kps','kps.id','=','pd.objectkelompokpasienlastfk')
-                        ->leftjoin ('rekanan_m as rk','rk.id','=','pd.objectrekananfk')
-                        ->leftjoin ('jeniskelamin_m as jk','jk.id','=','ps.objectjeniskelaminfk')
-                        ->leftjoin ('alamat_m as alm','alm.id','=','pd.nocmfk')
-                        ->leftjoin ('agama_m as agm','agm.id','=','ps.objectagamafk')
-                        ->select('pd.norec as norec_pd','pd.noregistrasi','pd.tglregistrasi','ps.nocm','ps.namapasien',
-                            'ps.tgllahir','ps.namakeluarga','ru.namaruangan','kls.namakelas','kps.kelompokpasien','rk.namarekanan','alm.alamatlengkap',
-                            'jk.jeniskelamin','agm.agama','ps.nohp','pd.statuspasien','pd.tglpulang','ps.id as nocmfk')
+                        ->leftjoin('pasien_m as ps', 'ps.id', '=', 'pd.nocmfk')
+                        ->leftjoin('ruangan_m as ru', 'ru.id', '=', 'pd.objectruanganlastfk')
+                        ->leftjoin('kelas_m as kls', 'kls.id', '=', 'pd.objectkelasfk')
+                        ->leftjoin('kelompokpasien_m as kps', 'kps.id', '=', 'pd.objectkelompokpasienlastfk')
+                        ->leftjoin('rekanan_m as rk', 'rk.id', '=', 'pd.objectrekananfk')
+                        ->leftjoin('jeniskelamin_m as jk', 'jk.id', '=', 'ps.objectjeniskelaminfk')
+                        ->leftjoin('alamat_m as alm', 'alm.id', '=', 'pd.nocmfk')
+                        ->leftjoin('agama_m as agm', 'agm.id', '=', 'ps.objectagamafk')
+                        ->select('pd.norec as norec_pd', 'pd.noregistrasi', 'pd.tglregistrasi', 'ps.nocm', 'ps.namapasien',
+                            'ps.tgllahir', 'ps.namakeluarga', 'ru.namaruangan', 'kls.namakelas', 'kps.kelompokpasien', 'rk.namarekanan', 'alm.alamatlengkap',
+                            'jk.jeniskelamin', 'agm.agama', 'ps.nohp', 'pd.statuspasien', 'pd.tglpulang', 'ps.id as nocmfk')
                         ->where('pd.norec', $r['norec_pd'])
-                        ->where('pd.kdprofile',   $_SESSION['kdProfile'])
+                        ->where('pd.kdprofile', $_SESSION['kdProfile'])
                         ->first();
 
                     $data = \DB::table('pasien_m as ps')
-                        ->join('pasiendaftar_t as pd','pd.nocmfk','=','ps.id')
-                        ->join('ruangan_m as ru','ru.id','=','pd.objectruanganlastfk')
-                        ->join('kelompokpasien_m as kp','kp.id','=','pd.objectkelompokpasienlastfk')
-                        ->leftjoin('pegawai_m as pg','pg.id','=','pd.objectpegawaifk')
-                        ->leftJoin('batalregistrasi_t as br','br.pasiendaftarfk','=','pd.norec')
+                        ->join('pasiendaftar_t as pd', 'pd.nocmfk', '=', 'ps.id')
+                        ->join('ruangan_m as ru', 'ru.id', '=', 'pd.objectruanganlastfk')
+                        ->join('kelompokpasien_m as kp', 'kp.id', '=', 'pd.objectkelompokpasienlastfk')
+                        ->leftjoin('pegawai_m as pg', 'pg.id', '=', 'pd.objectpegawaifk')
+                        ->leftJoin('batalregistrasi_t as br', 'br.pasiendaftarfk', '=', 'pd.norec')
                         ->select(DB::raw("pd.norec,pd.tglregistrasi,ps.nocm,pd.noregistrasi,ps.namapasien,pd.objectruanganlastfk,kp.kelompokpasien,ru.namaruangan,
 			                  pd.objectpegawaifk,pg.namalengkap as namadokter,pd.tglpulang,ru.objectdepartemenfk,
 			                  CASE when ru.objectdepartemenfk in (16,25,26) then 1 else 0 end as statusinap"))
                         ->whereNull('br.pasiendaftarfk')
-                        ->where('ps.kdprofile',  $_SESSION['kdProfile'])
-                      ->where('ps.id',$pasien->nocmfk);
-                      $data = $data->where('ps.statusenabled',true);
-                      $data = $data->orderBy('pd.tglregistrasi');
-                      $data = $data->get();
+                        ->where('ps.kdprofile', $_SESSION['kdProfile'])
+                        ->where('ps.id', $pasien->nocmfk);
+                    $data = $data->where('ps.statusenabled', true);
+                    $data = $data->orderBy('pd.tglregistrasi');
+                    $data = $data->get();
 
                     $norecaPd = '';
-                    foreach ($data as $ob){
-                        $norecaPd = $norecaPd.",'".$ob->norec. "'";
+                    foreach ($data as $ob) {
+                        $norecaPd = $norecaPd . ",'" . $ob->norec . "'";
                     }
-                    $norecaPd = substr($norecaPd, 1, strlen($norecaPd)-1);
+                    $norecaPd = substr($norecaPd, 1, strlen($norecaPd) - 1);
 
                     $diagnosa = DB::select(DB::raw("
                             SELECT
@@ -503,47 +503,47 @@ class MainController extends ApiController
                         AND apd.noregistrasifk IN ($norecaPd)
                             AND apd.statusenabled = true"));
 
-                    $i=0;
+                    $i = 0;
                     $dataDiagnosa = '';
-                    foreach ($data as $items){
+                    foreach ($data as $items) {
                         $data[$i]->diagnosa = '';
-                        foreach ($diagnosa as $dg){
-                            if ($data[$i]->norec == $dg->noregistrasifk){
-                                $data[$i]->diagnosa =     $data[$i]->diagnosa . ', ' . $dg->diagnosa;
-                             }
+                        foreach ($diagnosa as $dg) {
+                            if ($data[$i]->norec == $dg->noregistrasifk) {
+                                $data[$i]->diagnosa = $data[$i]->diagnosa . ', ' . $dg->diagnosa;
+                            }
                         }
                         $i = $i + 1;
                     }
 //                    dd($data);
                     $res = array(
-                        'pasien' =>$pasien,
-                        'details' =>$data,
+                        'pasien' => $pasien,
+                        'details' => $data,
                     );
-                    array_push($compact,'res','r');
+                    array_push($compact, 'res', 'r');
                     break;
                 case 'daftar-pasien-ri':
-                    $kdJeniPegawaiDokter = (int) $this->settingDataFixed('KdJenisPegawaiDokter',$kdProfile);
+                    $kdJeniPegawaiDokter = (int)$this->settingDataFixed('KdJenisPegawaiDokter', $kdProfile);
                     $dokter = \DB::table('pegawai_m')
-                        ->select('id','namalengkap')
+                        ->select('id', 'namalengkap')
                         ->where('statusenabled', true)
                         ->where('kdprofile', $kdProfile)
-                        ->where('objectjenispegawaifk',$kdJeniPegawaiDokter)
+                        ->where('objectjenispegawaifk', $kdJeniPegawaiDokter)
                         ->orderBy('namalengkap')
                         ->get();
 
 
-                    $deptInap = explode (',',$this->settingDataFixed('kdDepartemenRanapFix',$kdProfile));
+                    $deptInap = explode(',', $this->settingDataFixed('kdDepartemenRanapFix', $kdProfile));
                     $kdDeptInap = [];
-                    foreach ($deptInap as $item){
-                        $kdDeptInap []=  (int)$item;
+                    foreach ($deptInap as $item) {
+                        $kdDeptInap [] = (int)$item;
                     }
                     $deptPatok = $deptInap;
 
                     $ruangan = \DB::table('ruangan_m as ru')
-                        ->select('ru.id','ru.namaruangan','ru.objectdepartemenfk')
+                        ->select('ru.id', 'ru.namaruangan', 'ru.objectdepartemenfk')
                         ->where('ru.statusenabled', true)
                         ->wherein('ru.objectdepartemenfk', $deptPatok)
-                        ->where('ru.kdprofile',(int)$kdProfile)
+                        ->where('ru.kdprofile', (int)$kdProfile)
                         ->orderBy('ru.namaruangan')
                         ->get();
 
@@ -555,34 +555,34 @@ class MainController extends ApiController
                     }
                     $noreg = '';
                     if (isset($valid['noreg']) && $valid['noreg'] != "" && $valid['noreg'] != "undefined") {
-                        $noreg = " AND pd.noregistrasi = '" .  $valid['noreg']."'";
+                        $noreg = " AND pd.noregistrasi = '" . $valid['noreg'] . "'";
                     }
                     $norm = '';
                     if (isset($valid['src_nocm']) && $valid['src_nocm'] != "" && $valid['src_nocm'] != "undefined") {
-                        $norm = " AND (ps.nocm ilike '%" .  $valid['src_nocm']."%') 
-                        or  (ps.namapasien ilike '%" .  $valid['src_nocm']."%') ";
+                        $norm = " AND (ps.nocm ilike '%" . $valid['src_nocm'] . "%')
+                        or  (ps.namapasien ilike '%" . $valid['src_nocm'] . "%') ";
                     }
-                    $dokid='';
-                    if (isset($valid["src_idDokter"]) && $valid["src_idDokter"]!='1') {
-                        $dokid =" and pg.id = $valid[src_idDokter]";
-                    }else if (isset($valid["src_idDokter"]) && $valid["src_idDokter"] =='1'){
-                        $r['src_idDokter'] ='';
-                        $dokid= '';
-                    }else {
-                        $r['src_idDokter'] =$_SESSION['pegawai']->id;
-                        $dokid =" and pg.id = $r[src_idDokter]";
+                    $dokid = '';
+                    if (isset($valid["src_idDokter"]) && $valid["src_idDokter"] != '1') {
+                        $dokid = " and pg.id = $valid[src_idDokter]";
+                    } else if (isset($valid["src_idDokter"]) && $valid["src_idDokter"] == '1') {
+                        $r['src_idDokter'] = '';
+                        $dokid = '';
+                    } else {
+                        $r['src_idDokter'] = $_SESSION['pegawai']->id;
+                        $dokid = " and pg.id = $r[src_idDokter]";
                     }
-                    $data =collect(DB::select("select * from
-                        (select pd.tglregistrasi,  ps.id as nocmfk,  ps.nocm,  pd.noregistrasi,  ps.namapasien,  ps.tgllahir, 
-                         jk.jeniskelamin,  apd.objectruanganfk, ru.namaruangan,  kls.id as idkelas,kls.namakelas,  kp.kelompokpasien,  rek.namarekanan, 
+                    $data = collect(DB::select("select * from
+                        (select pd.tglregistrasi,  ps.id as nocmfk,  ps.nocm,  pd.noregistrasi,  ps.namapasien,  ps.tgllahir,
+                         jk.jeniskelamin,  apd.objectruanganfk, ru.namaruangan,  kls.id as idkelas,kls.namakelas,  kp.kelompokpasien,  rek.namarekanan,
                          apd.objectpegawaifk,  pg.namalengkap as namadokter,ps.iskompleks,
                          jk.id as jkid,   EXTRACT(YEAR FROM AGE(pd.tglregistrasi, ps.tgllahir)) || ' Thn '
                         || EXTRACT(MONTH FROM AGE(pd.tglregistrasi, ps.tgllahir)) || ' Bln '
                         || EXTRACT(DAY FROM AGE(pd.tglregistrasi, ps.tgllahir)) || ' Hr' AS umur,null as noreservasi,
-                          --br.norec, 
+                          --br.norec,
                           klstg.namakelas as kelasditanggung,
                           EXTRACT(day from age(current_date, to_date(to_char(pd.tglregistrasi,'YYYY-MM-DD'),'YYYY-MM-DD'))) || ' Hari' as lamarawat,
-                         pd.norec as norec_pd, apd.tglmasuk, apd.norec as norec_apd, row_number() over (partition by pd.noregistrasi order by apd.tglmasuk desc) as rownum 
+                         pd.norec as norec_pd, apd.tglmasuk, apd.norec as norec_apd, row_number() over (partition by pd.noregistrasi order by apd.tglmasuk desc) as rownum
                          from antrianpasiendiperiksa_t as apd
                          inner join pasiendaftar_t as pd on pd.norec = apd.noregistrasifk and pd.objectruanganlastfk = apd.objectruanganfk
                      --    left join batalregistrasi_t as br on br.pasiendaftarfk = pd.norec
@@ -598,13 +598,13 @@ class MainController extends ApiController
                         left join pemakaianasuransi_t as pa on pa.noregistrasifk=pd.norec
                         left join asuransipasien_m as asu on pa.objectasuransipasienfk=asu.id
                         left join kelas_m as klstg on klstg.id=asu.objectkelasdijaminfk
-                         --where br.norec is null 
+                         --where br.norec is null
                          where pd.statusenabled = true and pd.kdprofile = $kdProfile
-                        --and dept.id in (16,  17,  35) 
+                        --and dept.id in (16,  17,  35)
                         and pd.tglpulang is null --and pd.noregistrasi='1808010084'
-                        $ruangId $noreg $norm 
+                        $ruangId $noreg $norm
                         $dokid
-                        
+
                          --order by ru.namaruangan asc
                          ) as x where x.rownum=1")
                     );
@@ -619,13 +619,13 @@ class MainController extends ApiController
 
 //                    dd($count);
                     $norecaPd = '';
-                    foreach ($data as $ob){
-                        $norecaPd = $norecaPd.",'".$ob->norec_apd . "'";
+                    foreach ($data as $ob) {
+                        $norecaPd = $norecaPd . ",'" . $ob->norec_apd . "'";
                         $ob->kddiagnosa = [];
                     }
-                    $norecaPd = substr($norecaPd, 1, strlen($norecaPd)-1);
+                    $norecaPd = substr($norecaPd, 1, strlen($norecaPd) - 1);
                     $diagnosa = [];
-                    if($norecaPd!= ''){
+                    if ($norecaPd != '') {
                         $diagnosa = DB::select(DB::raw("
                            select dg.kddiagnosa,ddp.noregistrasifk as norec_apd
                            from detaildiagnosapasien_t as ddp
@@ -633,11 +633,11 @@ class MainController extends ApiController
                            left join diagnosa_m as dg on ddp.objectdiagnosafk=dg.id
                            where ddp.noregistrasifk in ($norecaPd) "));
                         $i = 0;
-                        foreach ($data as $h){
-                            $data[$i]->kddiagnosa =[];
-                            foreach ($diagnosa as $d){
-                                if($data[$i]->norec_apd == $d->norec_apd){
-                                    $data[$i]->kddiagnosa[] =   $d->kddiagnosa;
+                        foreach ($data as $h) {
+                            $data[$i]->kddiagnosa = [];
+                            foreach ($diagnosa as $d) {
+                                if ($data[$i]->norec_apd == $d->norec_apd) {
+                                    $data[$i]->kddiagnosa[] = $d->kddiagnosa;
                                 }
                             }
                             $i++;
@@ -647,13 +647,13 @@ class MainController extends ApiController
                      * hitung terlayani
                      */
                     $norecaPd2 = '';
-                    foreach ($count as $ob){
-                        $norecaPd2 = $norecaPd2.",'".$ob->norec_apd . "'";
+                    foreach ($count as $ob) {
+                        $norecaPd2 = $norecaPd2 . ",'" . $ob->norec_apd . "'";
                         $ob->kddiagnosa = [];
                     }
-                    $norecaPd2 = substr($norecaPd2, 1, strlen($norecaPd2)-1);
+                    $norecaPd2 = substr($norecaPd2, 1, strlen($norecaPd2) - 1);
                     $terlayani = 0;
-                    if($norecaPd2!= ''){
+                    if ($norecaPd2 != '') {
                         $diagnosa2 = DB::select(DB::raw("
                            select dg.kddiagnosa,ddp.noregistrasifk as norec_apd
                            from detaildiagnosapasien_t as ddp
@@ -662,13 +662,13 @@ class MainController extends ApiController
                            where ddp.noregistrasifk in ($norecaPd2) "));
                         $i = 0;
                         $terlayani = 0;
-                        foreach ($count as $h){
-                            $count[$i]->kddiagnosa =[];
-                            foreach ($diagnosa2 as $d){
-                                if($count[$i]->norec_apd == $d->norec_apd){
-                                    $count[$i]->kddiagnosa[] =   $d->kddiagnosa;
-                                    if(count($count[$i]->kddiagnosa) == 1){
-                                        $terlayani = $terlayani+1;
+                        foreach ($count as $h) {
+                            $count[$i]->kddiagnosa = [];
+                            foreach ($diagnosa2 as $d) {
+                                if ($count[$i]->norec_apd == $d->norec_apd) {
+                                    $count[$i]->kddiagnosa[] = $d->kddiagnosa;
+                                    if (count($count[$i]->kddiagnosa) == 1) {
+                                        $terlayani = $terlayani + 1;
                                     }
                                 }
                             }
@@ -678,172 +678,262 @@ class MainController extends ApiController
 //                    dd($data);
                     $total['total'] = count($count);
                     $total['terlayani'] = $terlayani;
-                    $total['belumterlayani'] = count($count) -$terlayani ;
+                    $total['belumterlayani'] = count($count) - $terlayani;
                     /*
                      * end hitung
                      */
 //                    dd($total);
-                    array_push($compact,'data','r','ruangan','dokter','total');
+                    array_push($compact, 'data', 'r', 'ruangan', 'dokter', 'total');
                     break;
                 case 'dashboard-pelayanan':
                     $tglawal = date('Y-m-d');
-                    $tglakhir =  date('Y-m-d');
+                    $tglakhir = date('Y-m-d');
 
-                    if (!isset($r->tglawal)&&!isset($r->tglakhir) ){
+                    if (!isset($r->tglawal) && !isset($r->tglakhir)) {
 
                         return redirect()->route("show_page",
                             ["role" => $_SESSION['role'],
                                 "pages" => $r->pages,
-                                "tglawal" =>  $tglawal,
+                                "tglawal" => $tglawal,
                                 "tglakhir" => $tglakhir]);
                     } else {
                         $tglawal = $r->tglawal;
                         $tglakhir = $r->tglakhir;
                     }
 
-                    $res['pengunjung'] = $this->getPengunjung($tglawal,$tglakhir,$kdProfile);
-                    $res['kunjungan'] = $this->getKunjungan($tglawal,$tglakhir,$kdProfile);
-                    $res['trend_kunjungan'] = $this->getTrendKunjunganPasienRajal($tglawal,$tglakhir,$kdProfile);
-                    $res['jenis_penjadwalan'] = $this->getPasienPerjenisPenjadwalan($tglawal,$tglakhir,$kdProfile);
-                    $res['info_kedatangan'] = $this->getInfoKunjunganRawatJalanPerhari($tglawal,$tglakhir,$kdProfile);
-                    $res['kunjungan_perjenispasien'] = $this->getKunjunganRSPerJenisPasien($tglawal,$tglakhir,$kdProfile);
-                    $res['tt_usia'] = $this->getTempatTidurTerpakai($tglawal,$tglakhir,$kdProfile);
+                    $res['pengunjung'] = $this->getPengunjung($tglawal, $tglakhir, $kdProfile);
+                    $res['kunjungan'] = $this->getKunjungan($tglawal, $tglakhir, $kdProfile);
+                    $res['trend_kunjungan'] = $this->getTrendKunjunganPasienRajal($tglawal, $tglakhir, $kdProfile);
+                    $res['jenis_penjadwalan'] = $this->getPasienPerjenisPenjadwalan($tglawal, $tglakhir, $kdProfile);
+                    $res['info_kedatangan'] = $this->getInfoKunjunganRawatJalanPerhari($tglawal, $tglakhir, $kdProfile);
+                    $res['kunjungan_perjenispasien'] = $this->getKunjunganRSPerJenisPasien($tglawal, $tglakhir, $kdProfile);
+                    $res['tt_usia'] = $this->getTempatTidurTerpakai($tglawal, $tglakhir, $kdProfile);
 
 
-                    $i=0;
-                    foreach ($res['pengunjung'] as $k){
+                    $i = 0;
+                    foreach ($res['pengunjung'] as $k) {
                         $k->warna = $this->listWarna()[$i];
                         $k->gambar = $this->listGambar()[$i];
-                        $k->namadepartemen =str_replace('Instalasi','Pengunjung ',  $k->namadepartemen);
+                        $k->namadepartemen = str_replace('Instalasi', 'Pengunjung ', $k->namadepartemen);
                         $i++;
                     }
-                    $z=0;
-                    foreach ($res['kunjungan'] as $k){
+                    $z = 0;
+                    foreach ($res['kunjungan'] as $k) {
                         $res['kunjungan'][$z]['warna'] = $this->listWarna()[$z];
                         $res['kunjungan'][$z]['gambar'] = $this->listGambar()[$z];
-                        $res['kunjungan'][$z]['namadepartemen'] =str_replace('Instalasi','Kunjungan ',  $k['namadepartemen']);
+                        $res['kunjungan'][$z]['namadepartemen'] = str_replace('Instalasi', 'Kunjungan ', $k['namadepartemen']);
                         $z++;
                     }
 
 //                    dd($res);
-                    array_push($compact,'res','r');
+                    array_push($compact, 'res', 'r');
                     break;
                 case 'dashboard-pendapatan':
                     $tglawal = date('Y-m-d');
-                    $tglakhir =  date('Y-m-d');
+                    $tglakhir = date('Y-m-d');
 
-                    if (!isset($r->tglawal)&&!isset($r->tglakhir) ){
+                    if (!isset($r->tglawal) && !isset($r->tglakhir)) {
                         return redirect()->route("show_page",
                             ["role" => $_SESSION['role'],
                                 "pages" => $r->pages,
-                                "tglawal" =>  $tglawal,
+                                "tglawal" => $tglawal,
                                 "tglakhir" => $tglakhir]);
                     } else {
                         $tglawal = $r->tglawal;
                         $tglakhir = $r->tglakhir;
                     }
-                    $res['pendapatan'] = $this->getPendapatanRumahSakit($tglawal,$tglakhir,$kdProfile,'sehari');
+                    $res['pendapatan'] = $this->getPendapatanRumahSakit($tglawal, $tglakhir, $kdProfile, 'sehari');
 //                    dd($res);
-                    array_push($compact,'res','r');
+                    array_push($compact, 'res', 'r');
                     break;
                 case 'dashboard-persediaan':
                     $tglawal = date('Y-m-d');
-                    $tglakhir =  date('Y-m-d');
+                    $tglakhir = date('Y-m-d');
 
-                    if (!isset($r->tglawal)&&!isset($r->tglakhir) ){
+                    if (!isset($r->tglawal) && !isset($r->tglakhir)) {
                         return redirect()->route("show_page",
                             ["role" => $_SESSION['role'],
                                 "pages" => $r->pages,
-                                "tglawal" =>  $tglawal,
+                                "tglawal" => $tglawal,
                                 "tglakhir" => $tglakhir]);
                     } else {
                         $tglawal = $r->tglawal;
                         $tglakhir = $r->tglakhir;
                     }
-                    $res['obat']= $this->getLaporanPemakaianObat($r);
-                    $res['stok']= $this->getInfoStok($r);
+                    $res['obat'] = $this->getLaporanPemakaianObat($r);
+                    $res['stok'] = $this->getInfoStok($r);
 //                    dd(  $res['stok']);
-                    $res['trend']= $this->getTrendPemakaianObat($r);
-                    array_push($compact,'res','r');
+                    $res['trend'] = $this->getTrendPemakaianObat($r);
+                    array_push($compact, 'res', 'r');
                     break;
                 case 'dashboard-sdm':
                     $tglawal = date('Y-m-d');
-                    $tglakhir =  date('Y-m-d');
+                    $tglakhir = date('Y-m-d');
 
-                    if (!isset($r->tglawal)&&!isset($r->tglakhir) ){
+                    if (!isset($r->tglawal) && !isset($r->tglakhir)) {
                         return redirect()->route("show_page",
                             ["role" => $_SESSION['role'],
                                 "pages" => $r->pages,
-                                "tglawal" =>  $tglawal,
+                                "tglawal" => $tglawal,
                                 "tglakhir" => $tglakhir]);
                     } else {
                         $tglawal = $r->tglawal;
                         $tglakhir = $r->tglakhir;
                     }
 
-                    $res['pegawai']= $this->getCountPegawai($r);
+                    $res['pegawai'] = $this->getCountPegawai($r);
                     $aktif = 0;
                     $nonaktif = 0;
-                    foreach ($res['pegawai']['statuspegawai'] as $s){
-                        if($s->statuspegawai == 'Aktif'){
-                            $aktif =$aktif + (float)$s->total;
-                        }else{
-                            $nonaktif =$nonaktif + (float)$s->total;
+                    foreach ($res['pegawai']['statuspegawai'] as $s) {
+                        if ($s->statuspegawai == 'Aktif') {
+                            $aktif = $aktif + (float)$s->total;
+                        } else {
+                            $nonaktif = $nonaktif + (float)$s->total;
                         }
                     }
                     $res['pegawai']['aktif'] = $aktif;
                     $res['pegawai']['nonaktif'] = $nonaktif;
 //                    dd($res['pegawai']);
-                    array_push($compact,'res','r');
+                    array_push($compact, 'res', 'r');
                     break;
                 case 'dashboard-backoffice':
                     $tglawal = date('Y-m-d');
-                    $tglakhir =  date('Y-m-d');
+                    $tglakhir = date('Y-m-d');
 
-                    if (!isset($r->tglawal)&&!isset($r->tglakhir) ){
+                    if (!isset($r->tglawal) && !isset($r->tglakhir)) {
                         return redirect()->route("show_page",
                             ["role" => $_SESSION['role'],
                                 "pages" => $r->pages,
-                                "tglawal" =>  $tglawal,
+                                "tglawal" => $tglawal,
                                 "tglakhir" => $tglakhir]);
                     } else {
                         $tglawal = $r->tglawal;
                         $tglakhir = $r->tglakhir;
                     }
 
-                    $res =[];
-                    array_push($compact,'res','r');
+                    $res = [];
+                    array_push($compact, 'res', 'r');
                     break;
                 case 'registrasi':
+                    $res = [];
+                    array_push($compact, 'res', 'r');
+                    break;
+                case 'formularium':
+                    $res = [];
+                    array_push($compact, 'res', 'r');
+                    break;
 
-                    $res =[];
-                    array_push($compact,'res','r');
+                case 'formularium-rev':
+                    $res = [];
+                    array_push($compact, 'res', 'r');
+                    break;
+                case 'home':
+                    $resuls = ModulAplikasiController::getMenDB();
+                    $rs =  $this->GenerateNavHTML($resuls);
+//                    dd($rs);
+                    $res = [];
+                    array_push($compact, 'res', 'r');
+                    break;
+               case 'formularium-rev':
+                    $res = [];
+                    array_push($compact, 'res', 'r');
                     break;
                 case 'leaflet':
                     break;
+                case 'UmVnaXN0cmFzaVBhc2llbkJhcnU=':
+                    $request["pages"] = 'registasi-pasien-baru';
+                      break;
                 default:
                     return abort(404);
                     break;
             }
-        }else{
+        } else {
             return abort(404);
         }
 
         $pages = $request["pages"];
         $role = $request["role"];
-        array_push($compact,"pages");
+        array_push($compact, "pages");
 //        if($pages == 'dashboard'){
 //            return view("module.".$role.".".$pages,compact($compact));
 //        }else  if($pages == 'dashboard-v2') {
 //            return view("module.".$role.".".$pages, compact($compact));
 //        }else{
-            return view("module.".$role.".".$pages.".".$pages,compact($compact));
+        return view("module." . $role . "." . $pages . "." . $pages, compact($compact));
 //        }
 
     }
-    public static function getDaftarPenerimaanSuplier ($tglAwal,$tglAkhir,Request $request){
+
+// loop the multidimensional array recursively to generate the HTML
+    public static function GenerateNavHTML()
+    {
+        $nav = file_get_contents(public_path()."/menu/".$_SESSION['role'].".json");
+        $result = json_decode($nav);
+        $html = '';
+        foreach($nav as $page)
+        {
+            $html .= '<ul><li>';
+            $html .= '<a href="' . $page['url'] . '">' . $page['name'] . '</a>';
+            $html .= self::GenerateNavHTML($page['child']);
+            $html .= '</li></ul>';
+        }
+        return $html;
+    }
+    function buildMenu($array)
+    {
+        $menu = '<li class="pcoded-hasmenu is-hover" subitem-icon="style1" dropdown-icon="style1">
+           ';
+        foreach ($array as $item)
+        {
+            echo ' <a href="javascript:void(0)">
+            <span class="pcoded-micon"><i class="feather icon-map"></i></span>
+            <span class="pcoded-mtext">'.$item['name'].'</span>
+            <span class="pcoded-mcaret"></span>
+            </a>';
+
+            if (!empty($item['children']))
+            {
+                echo '<ul class="pcoded-submenu">';
+                echo '<li class="pcoded-hasmenu is-hover" subitem-icon="style1" dropdown-icon="style1">
+                    <a href="javascript:void(0)">
+                    <span class="pcoded-micon"><i class="ti-home"></i></span>
+                    <span class="pcoded-mtext" data-i18n="nav.dash.main">'.$item['name'].'</span>
+                    <span class="pcoded-mcaret"></span>
+                    </a>';
+                $this->buildMenu($item['children']);
+                echo '</ul>';
+            }
+            echo '</li>';
+        }
+        echo '</ul>';
+    }
+    function prepareMenu($array)
+    {
+        $return = array();
+        //1
+        krsort($array);
+        foreach ($array as $k => &$item)
+        {
+            if (is_numeric($item['Parent']))
+            {
+                $parent = $item['Parent'];
+                if (empty($array[$parent]['Childs']))
+                {
+                    $array[$parent]['Childs'] = array();
+                }
+                //2
+                array_unshift($array[$parent]['Childs'],$item);
+                unset($array[$k]);
+            }
+        }
+        //3
+        ksort($array);
+        return $array;
+    }
+    public static function getDaftarPenerimaanSuplier($tglAwal, $tglAkhir, Request $request)
+    {
         $kdProfile = $_SESSION['kdProfile'];
-        $idProfile = (int) $kdProfile;
+        $idProfile = (int)$kdProfile;
         $data = \DB::table('strukpelayanan_t as sp')
             ->JOIN('strukpelayanandetail_t as spd', 'spd.nostrukfk', '=', 'sp.norec')
             ->leftJOIN('rekanan_m as rkn', 'rkn.id', '=', 'sp.objectrekananfk')
@@ -858,8 +948,8 @@ class MainController extends ApiController
             ->groupBy('sp.tglstruk', 'sp.nostruk', 'rkn.namarekanan', 'pg.namalengkap', 'sp.nokontrak', 'ru.namaruangan', 'sp.norec', 'sp.nofaktur',
                 'sp.tglfaktur', 'sp.totalharusdibayar', 'sbk.nosbk', 'sp.nosppb', 'sp.noorderfk', 'sp.qtyproduk');
 
-            $data = $data->where('sp.tglstruk', '>=', $tglAwal.' 00:00');
-            $data = $data->where('sp.tglstruk', '<=',  $tglAkhir.' 23:59');
+        $data = $data->where('sp.tglstruk', '>=', $tglAwal . ' 00:00');
+        $data = $data->where('sp.tglstruk', '<=', $tglAkhir . ' 23:59');
 
         if (isset($request['nostruk']) && $request['nostruk'] != "" && $request['nostruk'] != "undefined") {
             $data = $data->where('sp.nostruk', 'ilike', '%' . $request['nostruk']);
@@ -886,7 +976,7 @@ class MainController extends ApiController
             $details = \DB::select(DB::raw("select  pr.namaproduk,ss.satuanstandar,spd.qtyproduk,spd.qtyprodukretur,spd.hargasatuan,spd.hargadiscount,
                     --spd.hargappn,((spd.hargasatuan-spd.hargadiscount+spd.hargappn)*spd.qtyproduk) as total,spd.tglkadaluarsa,spd.nobatch
                     spd.hargappn,((spd.hargasatuan * spd.qtyproduk)-spd.hargadiscount+spd.hargappn) as total,spd.tglkadaluarsa,spd.nobatch
-                    from strukpelayanandetail_t as spd 
+                    from strukpelayanandetail_t as spd
                     left JOIN produk_m as pr on pr.id=spd.objectprodukfk
                     left JOIN satuanstandar_m as ss on ss.id=spd.objectsatuanstandarfk
                     where spd.kdprofile = $idProfile and nostrukfk=:norec"),
@@ -923,24 +1013,26 @@ class MainController extends ApiController
 
         return $result;
     }
-    public static function getDaftarDistribusiBarangPerUnit($tglAwal,$tglAkhir,Request $request) {
+
+    public static function getDaftarDistribusiBarangPerUnit($tglAwal, $tglAkhir, Request $request)
+    {
         $kdProfile = $_SESSION['kdProfile'];
-        $idProfile = (int) $kdProfile;
+        $idProfile = (int)$kdProfile;
         $kdSirs1 = $request['KdSirs1'];
-        $kdSirs2= $request['KdSirs2'];
+        $kdSirs2 = $request['KdSirs2'];
 
 
         $data = \DB::table('strukkirim_t as sp')
-            ->LEFTJOIN('pegawai_m as pg','pg.id','=','sp.objectpegawaipengirimfk')
-            ->LEFTJOIN('ruangan_m as ru','ru.id','=','sp.objectruanganasalfk')
-            ->LEFTJOIN('ruangan_m as ru2','ru2.id','=','sp.objectruangantujuanfk')
-            ->LEFTJOIN ('kirimproduk_t as kp','kp.nokirimfk','=','sp.norec')
-            ->LEFTJOIN ('produk_m as pr','pr.id','=','kp.objectprodukfk')
-            ->LEFTJOIN ('detailjenisproduk_m as djp','djp.id','=','pr.objectdetailjenisprodukfk')
-            ->LEFTJOIN ('jenisproduk_m as jp','jp.id','=','djp.objectjenisprodukfk')
-            ->LEFTJOIN ('kelompokproduk_m as kps','kps.id','=','jp.objectkelompokprodukfk')
-            ->LEFTJOIN ('asalproduk_m as ap','ap.id','=','kp.objectasalprodukfk')
-            ->LEFTJOIN ('satuanstandar_m as ss','ss.id','=','kp.objectsatuanstandarfk')
+            ->LEFTJOIN('pegawai_m as pg', 'pg.id', '=', 'sp.objectpegawaipengirimfk')
+            ->LEFTJOIN('ruangan_m as ru', 'ru.id', '=', 'sp.objectruanganasalfk')
+            ->LEFTJOIN('ruangan_m as ru2', 'ru2.id', '=', 'sp.objectruangantujuanfk')
+            ->LEFTJOIN('kirimproduk_t as kp', 'kp.nokirimfk', '=', 'sp.norec')
+            ->LEFTJOIN('produk_m as pr', 'pr.id', '=', 'kp.objectprodukfk')
+            ->LEFTJOIN('detailjenisproduk_m as djp', 'djp.id', '=', 'pr.objectdetailjenisprodukfk')
+            ->LEFTJOIN('jenisproduk_m as jp', 'jp.id', '=', 'djp.objectjenisprodukfk')
+            ->LEFTJOIN('kelompokproduk_m as kps', 'kps.id', '=', 'jp.objectkelompokprodukfk')
+            ->LEFTJOIN('asalproduk_m as ap', 'ap.id', '=', 'kp.objectasalprodukfk')
+            ->LEFTJOIN('satuanstandar_m as ss', 'ss.id', '=', 'kp.objectsatuanstandarfk')
             ->select(
                 DB::raw('sp.norec,pr.id as kodebarang,pr.kdproduk as kdsirs,pr.namaproduk,sp.nokirim,sp.jenispermintaanfk,sp.tglkirim,ss.satuanstandar,
                          kp.qtyproduk,kp.hargasatuan,ru.namaruangan as ruanganasal,ru2.namaruangan as ruangantujuan,(kp.qtyproduk*kp.hargasatuan) as total,
@@ -948,44 +1040,44 @@ class MainController extends ApiController
                          kps.kelompokproduk,kp.objectasalprodukfk,ap.asalproduk')
             )
             ->where('sp.kdprofile', $idProfile);
-        $data = $data->where('sp.tglkirim', '>=', $tglAwal.' 00:00');
-        $data = $data->where('sp.tglkirim', '<=',  $tglAkhir.' 23:59');
+        $data = $data->where('sp.tglkirim', '>=', $tglAwal . ' 00:00');
+        $data = $data->where('sp.tglkirim', '<=', $tglAkhir . ' 23:59');
 
-        if(isset($request['nokirim']) && $request['nokirim']!="" && $request['nokirim']!="undefined"){
-            $data = $data->where('sp.nokirim','ilike','%'. $request['nokirim']);
+        if (isset($request['nokirim']) && $request['nokirim'] != "" && $request['nokirim'] != "undefined") {
+            $data = $data->where('sp.nokirim', 'ilike', '%' . $request['nokirim']);
         }
-        if(isset($request['ruanganasalfk']) && $request['ruanganasalfk']!="" && $request['ruanganasalfk']!="undefined"){
-            $data = $data->where('ru.id','=', $request['ruanganasalfk']);
+        if (isset($request['ruanganasalfk']) && $request['ruanganasalfk'] != "" && $request['ruanganasalfk'] != "undefined") {
+            $data = $data->where('ru.id', '=', $request['ruanganasalfk']);
         }
-        if(isset($request['ruangantujuanfk']) && $request['ruangantujuanfk']!="" && $request['ruangantujuanfk']!="undefined"){
-            $data = $data->where('ru2.id','=', $request['ruangantujuanfk']);
+        if (isset($request['ruangantujuanfk']) && $request['ruangantujuanfk'] != "" && $request['ruangantujuanfk'] != "undefined") {
+            $data = $data->where('ru2.id', '=', $request['ruangantujuanfk']);
         }
-        if(isset($request['namaproduk']) && $request['namaproduk']!="" && $request['namaproduk']!="undefined"){
-            $data = $data->where('pr.namaproduk','ilike','%'. $request['namaproduk']);
+        if (isset($request['namaproduk']) && $request['namaproduk'] != "" && $request['namaproduk'] != "undefined") {
+            $data = $data->where('pr.namaproduk', 'ilike', '%' . $request['namaproduk']);
         }
 
-        if(isset($request['jenisProduk']) && $request['jenisProduk']!="" && $request['jenisProduk']!="undefined"){
-            $data = $data->where('djp.objectjenisprodukfk','=', $request['jenisProduk']);
+        if (isset($request['jenisProduk']) && $request['jenisProduk'] != "" && $request['jenisProduk'] != "undefined") {
+            $data = $data->where('djp.objectjenisprodukfk', '=', $request['jenisProduk']);
         }
-        if(isset($request['AsalProduk']) && $request['AsalProduk']!="" && $request['AsalProduk']!="undefined"){
-            $data = $data->where('kp.objectasalprodukfk','=',$request['AsalProduk']);
+        if (isset($request['AsalProduk']) && $request['AsalProduk'] != "" && $request['AsalProduk'] != "undefined") {
+            $data = $data->where('kp.objectasalprodukfk', '=', $request['AsalProduk']);
         }
-        if(isset($request['kelompokProduk']) && $request['kelompokProduk']!="" && $request['kelompokProduk']!="undefined"){
-            $data = $data->where('jp.objectkelompokprodukfk','=',$request['kelompokProduk']);
+        if (isset($request['kelompokProduk']) && $request['kelompokProduk'] != "" && $request['kelompokProduk'] != "undefined") {
+            $data = $data->where('jp.objectkelompokprodukfk', '=', $request['kelompokProduk']);
         }
-        if(isset( $request['KdSirs1'])&&  $request['KdSirs1']!=''){
-            if($request['KdSirs2'] != null &&  $request['KdSirs2']!='' && $request['KdSirs1'] != null &&  $request['KdSirs1']!= ''){
-                $data = $data->whereRaw (" (pr.kdproduk BETWEEN '".$request['KdSirs1']."' and '".$request['KdSirs2']."') ");
-            }elseif ($request['KdSirs2'] &&  $request['KdSirs2']!= '' && $request['KdSirs1'] == '' ||  $request['KdSirs1'] == null){
-                $data = $data->whereRaw = (" pr.kdproduk like '".$request['KdSirs2']."%'");
-            }elseif ($request['KdSirs1'] &&  $request['KdSirs1']!= '' && $request['KdSirs2'] == '' ||  $request['KdSirs2'] == null){
-                $data = $data->whereRaw = (" pr.kdproduk like '".$request['KdSirs1']."%'");
+        if (isset($request['KdSirs1']) && $request['KdSirs1'] != '') {
+            if ($request['KdSirs2'] != null && $request['KdSirs2'] != '' && $request['KdSirs1'] != null && $request['KdSirs1'] != '') {
+                $data = $data->whereRaw(" (pr.kdproduk BETWEEN '" . $request['KdSirs1'] . "' and '" . $request['KdSirs2'] . "') ");
+            } elseif ($request['KdSirs2'] && $request['KdSirs2'] != '' && $request['KdSirs1'] == '' || $request['KdSirs1'] == null) {
+                $data = $data->whereRaw = (" pr.kdproduk like '" . $request['KdSirs2'] . "%'");
+            } elseif ($request['KdSirs1'] && $request['KdSirs1'] != '' && $request['KdSirs2'] == '' || $request['KdSirs2'] == null) {
+                $data = $data->whereRaw = (" pr.kdproduk like '" . $request['KdSirs1'] . "%'");
             }
         }
 
-        $data = $data->where('sp.statusenabled',true);
-        $data = $data->where('sp.objectkelompoktransaksifk',34);
-        $data = $data->where('kp.qtyproduk','>', 0);
+        $data = $data->where('sp.statusenabled', true);
+        $data = $data->where('sp.objectkelompoktransaksifk', 34);
+        $data = $data->where('kp.qtyproduk', '>', 0);
         $data = $data->orderBy('sp.nokirim');
         $data = $data->get();
         $result = array(
@@ -995,8 +1087,10 @@ class MainController extends ApiController
         );
         return $data;
     }
-    public function getInfoStok(Request $request) {
-        $idProfile =  $_SESSION['kdProfile'];
+
+    public function getInfoStok(Request $request)
+    {
+        $idProfile = $_SESSION['kdProfile'];
         $data = DB::select(DB::raw("select sum( cast (spd.qtyproduk as float))  as qtyproduk,prd.namaproduk,
                 ru.namaruangan,ss.satuanstandar
                 from stokprodukdetail_t as spd
@@ -1005,12 +1099,12 @@ class MainController extends ApiController
                 inner JOIN produk_m as prd on prd.id=spd.objectprodukfk
                 left JOIN satuanstandar_m as ss on ss.id=prd.objectsatuanstandarfk
                 inner JOIN asalproduk_m as ap on ap.id=spd.objectasalprodukfk
-                where spd.kdprofile = $idProfile and spd.qtyproduk > 0 
-                and prd.statusenabled=true 
-                and ru.statusenabled=true  
+                where spd.kdprofile = $idProfile and spd.qtyproduk > 0
+                and prd.statusenabled=true
+                and ru.statusenabled=true
                 group by prd.namaproduk,ru.namaruangan,ss.satuanstandar
                 order by prd.namaproduk"));
-        if(count($data) > 0){
+        if (count($data) > 0) {
             foreach ($data as $key => $row) {
                 $count[$key] = $row->qtyproduk;
             }
@@ -1018,24 +1112,26 @@ class MainController extends ApiController
         }
 
 
-        $result= array(
+        $result = array(
             'data' => $data,
             'message' => 'inhuman',
         );
         return $data;
     }
-    public function getLaporanPemakaianObat (Request $request){
 
-        $idProfile = (int) $_SESSION['kdProfile'];
-        $tglAwal= Carbon::now()->format('Y-m-d 00:00');
-        $tglAkhir =Carbon::now()->format('Y-m-d 23:59');
+    public function getLaporanPemakaianObat(Request $request)
+    {
+
+        $idProfile = (int)$_SESSION['kdProfile'];
+        $tglAwal = Carbon::now()->format('Y-m-d 00:00');
+        $tglAkhir = Carbon::now()->format('Y-m-d 23:59');
         $data = DB::select(DB::raw("
             select * from (
                 select x.namaproduk ,sum (x.jumlah) as jumlah ,sum(x.total ) as total from (
 
                 select
                 prd.namaproduk  , pp.jumlah , (
-                ((  CASE WHEN   pp.hargasatuan IS NULL THEN 0 ELSE pp.hargasatuan END 
+                ((  CASE WHEN   pp.hargasatuan IS NULL THEN 0 ELSE pp.hargasatuan END
                 - CASE WHEN pp.hargadiscount IS NULL THEN   0 ELSE pp.hargadiscount END     ) * pp.jumlah
                 ) + CASE    WHEN    pp.jasa IS NULL THEN 0  ELSE        pp.jasa END) AS total
                 from  strukresep_t as sr
@@ -1047,26 +1143,26 @@ class MainController extends ApiController
                 Union all
 
                 SELECT pr.namaproduk,  (spd.qtyproduk) as jumlah,
-                  (((   CASE WHEN   spd.hargasatuan IS NULL THEN 0 ELSE spd.hargasatuan END 
+                  (((   CASE WHEN   spd.hargasatuan IS NULL THEN 0 ELSE spd.hargasatuan END
                 - CASE WHEN spd.hargadiscount IS NULL THEN  0 ELSE spd.hargadiscount END    ) * spd.qtyproduk
                 ) + CASE    WHEN    spd.hargatambahan IS NULL THEN 0    ELSE        spd.hargatambahan END) AS total
-                FROM strukpelayanan_t as sp  
-                JOIN strukpelayanandetail_t as spd on spd.nostrukfk = sp.norec  
+                FROM strukpelayanan_t as sp
+                JOIN strukpelayanandetail_t as spd on spd.nostrukfk = sp.norec
                 join produk_m as pr  on pr.id =spd.objectprodukfk
                 WHERE sp.kdprofile = $idProfile and sp.tglstruk BETWEEN   '$tglAwal' and '$tglAkhir'
-                AND sp.nostruk_intern='-' AND substring(sp.nostruk,1,2)='OB'  
+                AND sp.nostruk_intern='-' AND substring(sp.nostruk,1,2)='OB'
                 and sp.statusenabled != false
                 Union ALL
 
                 SELECT pr.namaproduk, (spd.qtyproduk) as jumlah,
-                  (((   CASE WHEN   spd.hargasatuan IS NULL THEN 0 ELSE spd.hargasatuan END 
+                  (((   CASE WHEN   spd.hargasatuan IS NULL THEN 0 ELSE spd.hargasatuan END
                 - CASE WHEN spd.hargadiscount IS NULL THEN  0 ELSE spd.hargadiscount END    ) * spd.qtyproduk
                 ) + CASE    WHEN    spd.hargatambahan IS NULL THEN 0    ELSE        spd.hargatambahan END) AS total
-                FROM strukpelayanan_t as sp  
-                JOIN strukpelayanandetail_t as spd on spd.nostrukfk = sp.norec  
+                FROM strukpelayanan_t as sp
+                JOIN strukpelayanandetail_t as spd on spd.nostrukfk = sp.norec
                 join produk_m as pr  on pr.id =spd.objectprodukfk
                 WHERE sp.kdprofile = $idProfile and sp.tglstruk BETWEEN   '$tglAwal' and '$tglAkhir'
-                AND sp.nostruk_intern not in ('-') AND substring(sp.nostruk,1,2)='OB'  
+                AND sp.nostruk_intern not in ('-') AND substring(sp.nostruk,1,2)='OB'
                 and sp.statusenabled != false
                 ) as x
                 group by x.namaproduk
@@ -1079,10 +1175,12 @@ class MainController extends ApiController
         );
         return $result;
     }
-    public function getDetailPegawai(Request $r){
-        $idProfile = (int) $_SESSION['kdProfile'];
-        if($r['jenis'] =='Aktif'){
-            $data =DB::select(DB::raw("select pg.namalengkap ,pg.id,jp.statuspegawai,
+
+    public function getDetailPegawai(Request $r)
+    {
+        $idProfile = (int)$_SESSION['kdProfile'];
+        if ($r['jenis'] == 'Aktif') {
+            $data = DB::select(DB::raw("select pg.namalengkap ,pg.id,jp.statuspegawai,
                   date_part('year', age( pg.tgllahir))::int as umur,pdd.pendidikan,jk.jeniskelamin,pg.tgllahir
                 from pegawai_m  as pg
                 left JOIN statuspegawai_m as jp on jp.id =pg.objectstatuspegawaifk
@@ -1091,22 +1189,23 @@ class MainController extends ApiController
                 where pg.kdprofile = $idProfile and pg.statusenabled=true
                 and jp.statuspegawai='$r[jenis]'
                 order by pg.namalengkap"));
-        }else{
-            $data =DB::select(DB::raw("select pg.namalengkap ,pg.id,jp.statuspegawai,
+        } else {
+            $data = DB::select(DB::raw("select pg.namalengkap ,pg.id,jp.statuspegawai,
               date_part('year', age( pg.tgllahir))::int  as umur,pdd.pendidikan,jk.jeniskelamin,pg.tgllahir
                 from pegawai_m  as pg
-                left JOIN statuspegawai_m as jp on jp.id =pg.objectstatuspegawaifk  
+                left JOIN statuspegawai_m as jp on jp.id =pg.objectstatuspegawaifk
                 left JOIN jeniskelamin_m as jk on jk.id =pg.objectjeniskelaminfk
                 left JOIN pendidikan_m as pdd on pg.objectpendidikanterakhirfk = pdd.id
                 where pg.kdprofile = $idProfile and pg.statusenabled=true
             and (jp.statuspegawai in ('Non Aktif') or jp.statuspegawai is null )
-                order by pg.namalengkap 
+                order by pg.namalengkap
                 "));
         }
-        return view('module.shared.detail-pegawai',compact('data'));
+        return view('module.shared.detail-pegawai', compact('data'));
 
 
     }
+
     public static function getLaporanLayanan()
     {
 
@@ -1119,7 +1218,7 @@ class MainController extends ApiController
                 select pg.id as iddokter,pp.norec,pg.namalengkap as dokter,pp.jumlah as count, pp.hargasatuan as tariff ,
                 pr.namaproduk as layanan, pp.hargasatuan * pp.jumlah as totall ,
                 ps.nocm,ps.namapasien,pp.tglpelayanan
-                from pelayananpasien_t as pp 
+                from pelayananpasien_t as pp
                 join antrianpasiendiperiksa_t as apd on apd.norec = pp.noregistrasifk
                 join pasiendaftar_t as pd on pd.norec = apd.noregistrasifk
                 join pasien_m as ps on ps.id = pd.nocmfk
@@ -1130,21 +1229,23 @@ class MainController extends ApiController
                 and pp.strukresepfk is null
                 and ppp.objectjenispetugaspefk=4
                 "));
-            return $results;
+        return $results;
     }
-    public function getCountPegawai(Request $request){
 
-        $idProfile = (int) $_SESSION['kdProfile'];
-        $kateg =$this->settingDataFixed('statusDataPegawaiException', $idProfile);
-        $keduduk =$this->settingDataFixed('listDataKedudukanException', $idProfile);
+    public function getCountPegawai(Request $request)
+    {
+
+        $idProfile = (int)$_SESSION['kdProfile'];
+        $kateg = $this->settingDataFixed('statusDataPegawaiException', $idProfile);
+        $keduduk = $this->settingDataFixed('listDataKedudukanException', $idProfile);
         $jenisKelamin = DB::select(DB::raw("select count ( x.namalengkap) as total, x.jeniskelamin from (
-                select jp.jeniskelamin,pg.namalengkap 
+                select jp.jeniskelamin,pg.namalengkap
                 from pegawai_m  as pg
                 left JOIN jeniskelamin_m as jp on jp.id =pg.objectjeniskelaminfk
                 where pg.statusenabled=true
                  )as x GROUP BY x.jeniskelamin"));
         $kategoryPegawai = DB::select(DB::raw("select count ( x.namalengkap) as total, x.kategorypegawai from (
-                select jp.kategorypegawai,pg.namalengkap 
+                select jp.kategorypegawai,pg.namalengkap
                 from pegawai_m  as pg
                 left JOIN kategorypegawai_m as jp on jp.id =pg.kategorypegawai
                 where pg.kdprofile = $idProfile and pg.statusenabled=true
@@ -1156,7 +1257,7 @@ class MainController extends ApiController
                 where pg.kdprofile = $idProfile and pg.statusenabled=true
                  )as x GROUP BY x.namakelompokjabatan"));
         $unitKerja = DB::select(DB::raw("
-            
+
             select count ( x.id) as total, x.unitkerja from (
             select uk.name as unitkerja,pg.namalengkap ,pg.id
             from pegawai_m as pg
@@ -1167,7 +1268,7 @@ class MainController extends ApiController
             as x GROUP BY x.unitkerja
                 "));
         $unitKerja2 = DB::select(DB::raw("
-            
+
             select count ( x.id) as total, x.unitkerja from (
             select uk.namaruangan as unitkerja,pg.namalengkap ,pg.id
             from pegawai_m as pg
@@ -1203,7 +1304,7 @@ class MainController extends ApiController
                    and pg.kdprofile = $idProfile
                  GROUP by jp.pendidikan
                 )as x
-                order by x.total  
+                order by x.total
                 "));
         $jenispegawai = DB::select(DB::raw("select x.total, x.jenis  from (
                 select jp.jenispegawai as jenis, count(pg.namalengkap) as total from pegawai_m  as pg
@@ -1212,7 +1313,7 @@ class MainController extends ApiController
                    and pg.kdprofile = $idProfile
                  GROUP by jp.jenispegawai
                 )as x
-                order by x.total  
+                order by x.total
                 "));
         $usia = DB::select(DB::raw("
                 select pg.namalengkap,pg.tgllahir ,
@@ -1222,47 +1323,47 @@ class MainController extends ApiController
                 where pg.kdprofile = $idProfile and pg.statusenabled=true
                 "));
         $under20 = 0;
-        $under30 =0;
-        $under40 =0;
-        $under50 =0;
-        $up51=0;
-        $usiaa =[];
-        foreach ($usia as $itemu){
-            if($itemu->umur <= 20){
-                $under20 = $under20 +1;
+        $under30 = 0;
+        $under40 = 0;
+        $under50 = 0;
+        $up51 = 0;
+        $usiaa = [];
+        foreach ($usia as $itemu) {
+            if ($itemu->umur <= 20) {
+                $under20 = $under20 + 1;
             }
-            if( $itemu->umur > 20 && $itemu->umur <= 30){
-                $under30 = $under30 +1;
+            if ($itemu->umur > 20 && $itemu->umur <= 30) {
+                $under30 = $under30 + 1;
             }
-            if($itemu->umur > 30 && $itemu->umur <=40){
-                $under40 = $under40 +1;
+            if ($itemu->umur > 30 && $itemu->umur <= 40) {
+                $under40 = $under40 + 1;
             }
-            if($itemu->umur > 40 && $itemu->umur <=50){
-                $under50 = $under50 +1;
+            if ($itemu->umur > 40 && $itemu->umur <= 50) {
+                $under50 = $under50 + 1;
             }
-            if($itemu->umur > 50){
-                $up51 = $up51 +1;
+            if ($itemu->umur > 50) {
+                $up51 = $up51 + 1;
             }
         }
-        $usiaa []= array(
+        $usiaa [] = array(
             'total' => $under20,
             'usia' => 'dibawah 20 Tahun',
         );
-        $usiaa []= array(
+        $usiaa [] = array(
             'total' => $under30,
             'usia' => '21 s/d 30 Tahun',
         );
-        $usiaa []= array(
+        $usiaa [] = array(
             'total' => $under40,
             'usia' => '31 s/d 40 Tahun',
         );
-        $usiaa []= array(
+        $usiaa [] = array(
             'total' => $under50,
             'usia' => '41 s/d 50 Tahun',
         );
-        $usiaa []= array(
+        $usiaa [] = array(
             'total' => $up51,
-            'usia' =>'diatas 51 Tahun' ,
+            'usia' => 'diatas 51 Tahun',
         );
         $tglAwal = Carbon::now()->startOfMonth();
         $tglAkhir = Carbon::now()->endOfMonth();
@@ -1276,25 +1377,25 @@ class MainController extends ApiController
             left join pendidikan_m as pdd on pg.objectpendidikanterakhirfk = pdd.id
             left join subunitkerja_m sm on mappe.objectsubunitkerjapegawaifk = sm.id
             left join unitkerjapegawai_m  as uk on mappe.objectunitkerjapegawaifk = uk.id
-            where mappe.kdprofile = $idProfile 
+            where mappe.kdprofile = $idProfile
             and pg.tglpensiun between '$tglAwal' and '$tglAkhir'
             order by pg.namalengkap"));
 
-        $pensiun['tglAwal'] =$tglAwal;
-        $pensiun['tglAkhir'] =$tglAkhir;
+        $pensiun['tglAwal'] = $tglAwal;
+        $pensiun['tglAkhir'] = $tglAkhir;
         $pensiun['bulan'] = Carbon::now()->format('F Y');
-        $pensiun['data'] =$dataPensiun;
+        $pensiun['data'] = $dataPensiun;
 
         $result = array(
             'jeniskelamin' => $jenisKelamin,
-            'countjk'=>count($jenisKelamin),
+            'countjk' => count($jenisKelamin),
             'kategoripegawai' => $kategoryPegawai,
             'jenispegawai' => $jenispegawai,
             'kelompokjabatan' => $kelompokJabatan,
             'unitkerjapegawai' => $unitKerja,
             'statuspegawai' => $statusPegawai,
 //            'kedudukan' => $kedudukanPeg,
-            'unitkerja2' =>$unitKerja2,
+            'unitkerja2' => $unitKerja2,
             'pendidikan' => $pendidikan,
             'usia' => $usiaa,
             'datapensiun' => $pensiun,
@@ -1303,14 +1404,16 @@ class MainController extends ApiController
         return $result;
 
     }
-    public function getTrendPemakaianObat (Request $request){
+
+    public function getTrendPemakaianObat(Request $request)
+    {
         $idProfile = $_SESSION['kdProfile'];
-        $tglAwal= Carbon::now()->format('Y-m-d 00:00');
-        $tglAkhir =Carbon::now()->format('Y-m-d 23:59');
+        $tglAwal = Carbon::now()->format('Y-m-d 00:00');
+        $tglAkhir = Carbon::now()->format('Y-m-d 23:59');
         $data = DB::select(DB::raw("select * from
                 (
-                select sum(pp.jumlah) as jumlah,prd.namaproduk  
-                from pelayananpasien_t  as pp 
+                select sum(pp.jumlah) as jumlah,prd.namaproduk
+                from pelayananpasien_t  as pp
                 join produk_m as prd on pp.produkfk= prd.id
                 where pp.tglpelayanan BETWEEN '$tglAwal' and  '$tglAkhir'
                 and pp.strukresepfk is not null
@@ -1318,20 +1421,20 @@ class MainController extends ApiController
 
                 UNION ALL
                 SELECT  sum(spd.qtyproduk) as jumlah,pr.namaproduk
-               FROM strukpelayanan_t as sp  
-                JOIN strukpelayanandetail_t as spd on spd.nostrukfk = sp.norec  
+               FROM strukpelayanan_t as sp
+                JOIN strukpelayanandetail_t as spd on spd.nostrukfk = sp.norec
                 join produk_m as pr  on pr.id =spd.objectprodukfk
                 WHERE sp.kdprofile = $idProfile and sp.tglstruk BETWEEN '$tglAwal' and  '$tglAkhir'
-                AND sp.nostruk_intern='-' AND substring(sp.nostruk,1,2)='OB'  
+                AND sp.nostruk_intern='-' AND substring(sp.nostruk,1,2)='OB'
                 and sp.statusenabled != false
                 GROUP BY pr.namaproduk
-                UNION ALL    
+                UNION ALL
                  SELECT sum  (spd.qtyproduk) as jumlah,pr.namaproduk
-               FROM strukpelayanan_t as sp  
-                JOIN strukpelayanandetail_t as spd on spd.nostrukfk = sp.norec  
+               FROM strukpelayanan_t as sp
+                JOIN strukpelayanandetail_t as spd on spd.nostrukfk = sp.norec
                 join produk_m as pr  on pr.id =spd.objectprodukfk
                 WHERE sp.kdprofile = $idProfile and sp.tglstruk BETWEEN '$tglAwal' and  '$tglAkhir'
-              AND sp.nostruk_intern not in ('-') AND substring(sp.nostruk,1,2)='OB'  
+              AND sp.nostruk_intern not in ('-') AND substring(sp.nostruk,1,2)='OB'
                 and sp.statusenabled != false
                         GROUP BY pr.namaproduk
                 ) as x
@@ -1344,22 +1447,24 @@ class MainController extends ApiController
         );
         return $result;
     }
-    public static function getPendapatanRumahSakit($tgl1,$tgl2, $kdProfile,$tipe){
 
-        $idProfile = (int) $kdProfile;
-        $data =[];
-        if($tipe == 'sehari'){
-            $tglAwal = $tgl1 .' 00:00';
-            $tglAkhir = $tgl2.' 23:59';
+    public static function getPendapatanRumahSakit($tgl1, $tgl2, $kdProfile, $tipe)
+    {
+
+        $idProfile = (int)$kdProfile;
+        $data = [];
+        if ($tipe == 'sehari') {
+            $tglAwal = $tgl1 . ' 00:00';
+            $tglAkhir = $tgl2 . ' 23:59';
         }
-        if($tipe == 'seminggu'){
+        if ($tipe == 'seminggu') {
             $tglAwal = Carbon::now()->subWeek(1)->toDateString();//  Carbon::now()->subMonth(1);
-            $tglAwal = date($tglAwal.' 00:00');
-            $tglAkhir =date('Y-m-d 23:59');
+            $tglAwal = date($tglAwal . ' 00:00');
+            $tglAkhir = date('Y-m-d 23:59');
         }
 
-        $data =DB::select(DB::raw("
-        
+        $data = DB::select(DB::raw("
+
       SELECT
     x.tglpencarian,
     x.namaruangan,
@@ -1508,10 +1613,10 @@ GROUP BY
     x.kelompokpasien,
     x.namaruangan,
     x.namadepartemen
-   
+
 
            "));
-        if(count($data) >0){
+        if (count($data) > 0) {
             foreach ($data as $key => $row) {
                 $count[$key] = $row->tglpencarian;
             }
@@ -1529,14 +1634,17 @@ GROUP BY
         return $result;
 
     }
+
     public static function formatRp($number)
     {
-        return 'Rp.'.number_format((float)$number ,2,".",",");
+        return 'Rp.' . number_format((float)$number, 2, ".", ",");
     }
-    public static function getPenerimaanKasir($tgl,$tgl2,$kdProfile){
-        $request['tglAwal'] = $tgl. ' 00:00';
-        $request['tglAkhir'] =   $tgl2 . ' 23:59';
-        $idProfile = (int) $kdProfile;
+
+    public static function getPenerimaanKasir($tgl, $tgl2, $kdProfile)
+    {
+        $request['tglAwal'] = $tgl . ' 00:00';
+        $request['tglAkhir'] = $tgl2 . ' 23:59';
+        $idProfile = (int)$kdProfile;
         $data = \DB::table('strukbuktipenerimaan_t as sbm')
             ->leftJOIN('strukbuktipenerimaancarabayar_t as sbmc', 'sbmc.nosbmfk', '=', 'sbm.norec')
             ->leftJOIN('carabayar_m as cb', 'cb.id', '=', 'sbmc.objectcarabayarfk')
@@ -1551,15 +1659,15 @@ GROUP BY
             ->leftJoin('departemen_m as dp', 'dp.id', '=', 'ru.objectdepartemenfk')
             ->leftJOIN('kelompokpasien_m as kp', 'kp.id', '=', 'pd.objectkelompokpasienlastfk')
             ->select('sbm.tglsbm', 'ps.nocm', 'ru.namaruangan', 'pg.namalengkap', 'pg2.namalengkap as kasir',
-                'sp.totalharusdibayar', 'sbm.totaldibayar','ru.objectdepartemenfk','ru.id as ruid','dp.namadepartemen',
-                DB::raw('( case when pd.noregistrasi is null then sp.nostruk else pd.noregistrasi end) as noregistrasi, 
+                'sp.totalharusdibayar', 'sbm.totaldibayar', 'ru.objectdepartemenfk', 'ru.id as ruid', 'dp.namadepartemen',
+                DB::raw('( case when pd.noregistrasi is null then sp.nostruk else pd.noregistrasi end) as noregistrasi,
                 (case when ps.namapasien is null then sp.namapasien_klien else ps.namapasien end) as namapasien,
                 (case when kp.kelompokpasien is null then null else kp.kelompokpasien end) as kelompokpasien,
                 (CASE WHEN sp.totalprekanan is null then 0 else sp.totalprekanan end) as hutangpenjamin,
-                (case when cb.id = 1 then sbm.totaldibayar else 0 end) as tunai, 
+                (case when cb.id = 1 then sbm.totaldibayar else 0 end) as tunai,
                 (case when cb.id > 1 then sbm.totaldibayar else 0 end) as nontunai')
             )
-            ->where('sbm.kdprofile',$idProfile);
+            ->where('sbm.kdprofile', $idProfile);
 //            ->where('djp.objectjenisprodukfk','<>',97)
 //            ->whereNull('sp.statusenabled')
 //            ->where('ru.objectdepartemenfk',18);
@@ -1601,8 +1709,8 @@ GROUP BY
     public function getDetailPendapatan(Request $r)
     {
 
-    $data =DB::select(DB::raw("
-        
+        $data = DB::select(DB::raw("
+
 
     SELECT
                 x.namapasien,
@@ -1785,37 +1893,38 @@ AND sp.statusenabled <> false
                 x.namaruangan,
                 x.namadepartemen,
                 x.layanan
-            
-                            
-            
+
+
+
                        "));
 
 
-
-    return view('module.shared.detail-pendapatan',compact('data'));
+        return view('module.shared.detail-pendapatan', compact('data'));
 
 
     }
-    public function  getDetailKun(Request $r){
+
+    public function getDetailKun(Request $r)
+    {
         $idProfile = $_SESSION['kdProfile'];
-        $tglAwal = $r['tglawal'].' 00:00';
-        $tglAkhir =  $r['tglakhir'].' 23:59';
-        $idDepRanap = (int) $this->settingDataFixed('idDepRawatInap', $idProfile);
-        $idDepFarmasi = (int) $this->settingDataFixed('IdDepartemenInstalasiFarmasi',$idProfile);
-        $isfaramsi =false;
-        if($r['jenis'] == 'pengunjung'){
+        $tglAwal = $r['tglawal'] . ' 00:00';
+        $tglAkhir = $r['tglakhir'] . ' 23:59';
+        $idDepRanap = (int)$this->settingDataFixed('idDepRawatInap', $idProfile);
+        $idDepFarmasi = (int)$this->settingDataFixed('IdDepartemenInstalasiFarmasi', $idProfile);
+        $isfaramsi = false;
+        if ($r['jenis'] == 'pengunjung') {
             $data = DB::table('pasiendaftar_t as pd')
-                ->join('pasien_m as ps','ps.id','=','pd.nocmfk')
-                ->join('ruangan_m as ru','ru.id','=','pd.objectruanganlastfk')
-                ->join ('departemen_m as dp','dp.id','=','ru.objectdepartemenfk')
-                ->select('pd.noregistrasi','pd.tglregistrasi','ps.nocm','ps.namapasien','ru.namaruangan',
+                ->join('pasien_m as ps', 'ps.id', '=', 'pd.nocmfk')
+                ->join('ruangan_m as ru', 'ru.id', '=', 'pd.objectruanganlastfk')
+                ->join('departemen_m as dp', 'dp.id', '=', 'ru.objectdepartemenfk')
+                ->select('pd.noregistrasi', 'pd.tglregistrasi', 'ps.nocm', 'ps.namapasien', 'ru.namaruangan',
                     'pd.tglpulang')
                 ->where('pd.kdprofile', $idProfile)
-                ->whereBetween('pd.tglregistrasi',[$tglAwal,$tglAkhir])
-                ->where('ru.objectdepartemenfk',$r['id'])
-                ->where('pd.statusenabled',1)
+                ->whereBetween('pd.tglregistrasi', [$tglAwal, $tglAkhir])
+                ->where('ru.objectdepartemenfk', $r['id'])
+                ->where('pd.statusenabled', 1)
                 ->get();
-        }else{
+        } else {
             if ($r['id'] == $idDepRanap) {
                 $data = DB::select(DB::raw("SELECT
                     pd.noregistrasi,
@@ -1829,18 +1938,18 @@ AND sp.statusenabled <> false
                 INNER JOIN pasien_m AS ps ON ps.id = pd.nocmfk
                 INNER JOIN ruangan_m AS ru ON ru.id = pd.objectruanganlastfk
                 INNER JOIN departemen_m AS dp ON dp.id = ru.objectdepartemenfk
-                WHERE pd.kdprofile = $idProfile 
+                WHERE pd.kdprofile = $idProfile
                 and pd.statusenabled = true
                 AND (
                     pd.tglregistrasi < '$tglAwal'
                     AND pd.tglpulang >= '$tglAkhir'
-                  OR pd.tglpulang IS NULL 
+                  OR pd.tglpulang IS NULL
                 )
-               
+
              "));
-            }else if($r['id']==$idDepFarmasi){
-                $isfaramsi =true;
-                $data =DB::select(DB::raw("
+            } else if ($r['id'] == $idDepFarmasi) {
+                $isfaramsi = true;
+                $data = DB::select(DB::raw("
                 SELECT
                     apd.norec,  pd.noregistrasi,pd.tglregistrasi,
                     ps.nocm,ps.namapasien,
@@ -1854,74 +1963,76 @@ AND sp.statusenabled <> false
                 INNER JOIN strukresep_t AS sr ON sr.pasienfk = apd.norec
                 LEFT JOIN pegawai_m AS pg ON sr.penulisresepfk = pg. ID
                 LEFT JOIN ruangan_m AS ru2 ON ru2. ID = sr.ruanganfk
-                WHERE pd.kdprofile = $idProfile and 
+                WHERE pd.kdprofile = $idProfile and
                     sr.tglresep BETWEEN '$tglAwal'
                 AND '$tglAkhir'
                  and (sr.statusenabled is null or sr.statusenabled = true)
                "));
-            }else{
+            } else {
                 $data = DB::table('antrianpasiendiperiksa_t as apd')
-                    ->join('pasiendaftar_t as pd','pd.norec','=','apd.noregistrasifk')
-                    ->join('pasien_m as ps','ps.id','=','pd.nocmfk')
-                    ->join('ruangan_m as ru','ru.id','=','apd.objectruanganfk')
-                    ->join ('departemen_m as dp','dp.id','=','ru.objectdepartemenfk')
-                    ->select('pd.noregistrasi','pd.tglregistrasi','ps.nocm','ps.namapasien','ru.namaruangan',
+                    ->join('pasiendaftar_t as pd', 'pd.norec', '=', 'apd.noregistrasifk')
+                    ->join('pasien_m as ps', 'ps.id', '=', 'pd.nocmfk')
+                    ->join('ruangan_m as ru', 'ru.id', '=', 'apd.objectruanganfk')
+                    ->join('departemen_m as dp', 'dp.id', '=', 'ru.objectdepartemenfk')
+                    ->select('pd.noregistrasi', 'pd.tglregistrasi', 'ps.nocm', 'ps.namapasien', 'ru.namaruangan',
                         'pd.tglpulang')
-                    ->where('apd.kdprofile',$idProfile)
-                    ->whereBetween('apd.tglregistrasi',[$tglAwal,$tglAkhir])
-                    ->where('pd.statusenabled',1)
-                    ->where('ru.objectdepartemenfk',$r['id'])
+                    ->where('apd.kdprofile', $idProfile)
+                    ->whereBetween('apd.tglregistrasi', [$tglAwal, $tglAkhir])
+                    ->where('pd.statusenabled', 1)
+                    ->where('ru.objectdepartemenfk', $r['id'])
                     ->get();
             }
         }
 
-         $title = DB::table('departemen_m')->where('id',$r['id'])->first()->namadepartemen;
-         return view('module.shared.detail-kunjungan',compact('data','title','isfaramsi'));
+        $title = DB::table('departemen_m')->where('id', $r['id'])->first()->namadepartemen;
+        return view('module.shared.detail-kunjungan', compact('data', 'title', 'isfaramsi'));
 
     }
-    function getComboDiagnosaTop(){
+
+    function getComboDiagnosaTop()
+    {
         $data = DB::select(DB::raw("select kddiagnosa,namadiagnosa from pelayananmedis_t
                 where kddiagnosa is not null
                 and kddiagnosa !='-'
                 GROUP BY kddiagnosa,namadiagnosa
                 order by kddiagnosa asc"));
         echo "<option value=''>-- Filter Diagnosa --</option>";
-        foreach ($data as $k ) {
-            echo "<option value='$k->kddiagnosa' >".$k->kddiagnosa.' - '.$k->namadiagnosa."</option>";
+        foreach ($data as $k) {
+            echo "<option value='$k->kddiagnosa' >" . $k->kddiagnosa . ' - ' . $k->namadiagnosa . "</option>";
         }
     }
+
     public static function getAllMonitoringKlaim()
     {
         $kdProfile = $_SESSION['kdProfile'];
-        $y =date('Y')-1;
-        $start = $month = strtotime($y.'-01-01');
+        $y = date('Y') - 1;
+        $start = $month = strtotime($y . '-01-01');
         $end = strtotime(date('Y-m-d'));
         $arrM = [];
-        while($month < $end)
-        {
+        while ($month < $end) {
             $arrM [] = array(
-                'blntahun' =>  date('Y-m', $month),
-                'tahun' =>  date('Y', $month),
-                'bulan' =>  date('F', $month),
+                'blntahun' => date('Y-m', $month),
+                'tahun' => date('Y', $month),
+                'bulan' => date('F', $month),
                 'jmlkasus_ri' => 0,
                 'jmlkasuspending_ri' => 0,
-                'pengajuan_ri' =>  static::formatRp(0),
+                'pengajuan_ri' => static::formatRp(0),
                 'pending_ri' => static::formatRp(0),
                 'klaim_ri' => static::formatRp(0),
                 'jmlkasus_rj' => 0,
                 'jmlkasuspending_rj' => 0,
-                'pengajuan_rj' =>static::formatRp(0),
+                'pengajuan_rj' => static::formatRp(0),
                 'pending_rj' => static::formatRp(0),
-                'klaim_rj' =>static::formatRp(0),
+                'klaim_rj' => static::formatRp(0),
             );
             $month = strtotime("+1 month", $month);
         }
-        foreach ($arrM  as $key => $row) {
+        foreach ($arrM as $key => $row) {
             $count[$key] = $row['blntahun'];
         }
         array_multisort($count, SORT_DESC, $arrM);
         // return $arrM ;
-        $data =  DB::select(DB::raw("select x.tahun,x.bulan,
+        $data = DB::select(DB::raw("select x.tahun,x.bulan,
             sum(x.jmlkasus_ri) as jmlkasus_ri ,sum(x.jmlkasuspending_ri) as jmlkasuspending_ri ,
             sum(x.pengajuan_ri) as pengajuan_ri ,
             sum(x.pending_ri) as pending_ri ,
@@ -1957,20 +2068,20 @@ AND sp.statusenabled <> false
         $i = 0;
         foreach ($arrM as $key => $v) {
             foreach ($data as $key2 => $k) {
-                if($arrM[$i]['blntahun'] == $k->blntahun){
+                if ($arrM[$i]['blntahun'] == $k->blntahun) {
                     $arrM[$i]['blntahun'] = $k->blntahun;
-                    $arrM[$i]['tahun']  = $k->tahun;
+                    $arrM[$i]['tahun'] = $k->tahun;
                     // $arrM[$i]['bulan']  =  $k->bulan;
-                    $arrM[$i]['jmlkasus_ri'] =  $k->jmlkasus_ri;
-                    $arrM[$i]['jmlkasuspending_ri'] =  $k->jmlkasuspending_ri;
-                    $arrM[$i]['pengajuan_ri'] =  static::formatRp( $k->pengajuan_ri);
-                    $arrM[$i]['pending_ri'] = static::formatRp( $k->pending_ri);
-                    $arrM[$i]['klaim_ri'] = static::formatRp( $k->klaim_ri);
-                    $arrM[$i]['jmlkasus_rj'] =  $k->jmlkasus_rj;
+                    $arrM[$i]['jmlkasus_ri'] = $k->jmlkasus_ri;
+                    $arrM[$i]['jmlkasuspending_ri'] = $k->jmlkasuspending_ri;
+                    $arrM[$i]['pengajuan_ri'] = static::formatRp($k->pengajuan_ri);
+                    $arrM[$i]['pending_ri'] = static::formatRp($k->pending_ri);
+                    $arrM[$i]['klaim_ri'] = static::formatRp($k->klaim_ri);
+                    $arrM[$i]['jmlkasus_rj'] = $k->jmlkasus_rj;
                     $arrM[$i]['jmlkasuspending_rj'] = $k->jmlkasuspending_rj;
-                    $arrM[$i]['pengajuan_rj'] =static::formatRp( $k->pengajuan_rj);
-                    $arrM[$i]['pending_rj'] = static::formatRp( $k->pending_rj);
-                    $arrM[$i]['klaim_rj'] =static::formatRp( $k->klaim_rj);
+                    $arrM[$i]['pengajuan_rj'] = static::formatRp($k->pengajuan_rj);
+                    $arrM[$i]['pending_rj'] = static::formatRp($k->pending_rj);
+                    $arrM[$i]['klaim_rj'] = static::formatRp($k->klaim_rj);
 
                 }
             }
@@ -1985,9 +2096,11 @@ AND sp.statusenabled <> false
 
         return $arrM;
     }
-    public static function getKetersediaanTempatTidurPerkelas($tglAwal, $tglAkhir,$kdProfile){
 
-        $idProfile = (int) $kdProfile;
+    public static function getKetersediaanTempatTidurPerkelas($tglAwal, $tglAkhir, $kdProfile)
+    {
+
+        $idProfile = (int)$kdProfile;
 
         $data = DB::select(DB::raw("select sum(x.isi) as terpakai, sum(x.kosong) as kosong,x.namakelas,
         sum(x.isi)+ sum(x.kosong) as jml from (
@@ -2017,22 +2130,24 @@ AND sp.statusenabled <> false
 
         return $data;
     }
-    public static function getBorLosToi($tglAwal,$tglAkhir,$kdProfile){
 
-        $idProfile = (int) $kdProfile;
+    public static function getBorLosToi($tglAwal, $tglAkhir, $kdProfile)
+    {
+
+        $idProfile = (int)$kdProfile;
         $idDepRaJal = (int)static::settingDataFixed2('KdDepartemenRawatJalan', $idProfile);
-        $idDepRanap = (int) static::settingDataFixed2('idDepRawatInap', $idProfile);
-        $idStatKelMeninggal = (int) static::settingDataFixed2('KdStatKeluarMeninggal',$idProfile);
-        $idKondisiPasienMeninggal = (int) static::settingDataFixed2('KdKondisiPasienMeninggal', $idProfile);
-        $tglAwal =$tglAwal.' 00:00';
-        $tglAkhir = $tglAkhir.' 23:59';
+        $idDepRanap = (int)static::settingDataFixed2('idDepRawatInap', $idProfile);
+        $idStatKelMeninggal = (int)static::settingDataFixed2('KdStatKeluarMeninggal', $idProfile);
+        $idKondisiPasienMeninggal = (int)static::settingDataFixed2('KdKondisiPasienMeninggal', $idProfile);
+        $tglAwal = $tglAwal . ' 00:00';
+        $tglAkhir = $tglAkhir . ' 23:59';
         $tahun = new \DateTime($tglAkhir);
-        $tahun = date ('Y');
+        $tahun = date('Y');
         $datetime1 = new \DateTime($tglAwal);
         $datetime2 = new \DateTime($tglAkhir);
         $interval = $datetime1->diff($datetime2);
         $sehari = 1;//$interval->format('%d');
-        $data10=[];
+        $data10 = [];
         $jumlahTT = collect(DB::select("SELECT
                     tt.id,
                     tt.objectstatusbedfk
@@ -2045,21 +2160,21 @@ AND sp.statusenabled <> false
             AND tt.statusenabled = true
             AND kmr.statusenabled = true
             "))->count();
-        if($jumlahTT == 0){
+        if ($jumlahTT == 0) {
             $data10[] = array(
-                'lamarawat'=> 0 ,
-                'hariperawatan' =>0,
-                'pasienpulang' =>0,
+                'lamarawat' => 0,
+                'hariperawatan' => 0,
+                'pasienpulang' => 0,
                 'meninggal' => 0,
-                'matilebih48' =>  0,
+                'matilebih48' => 0,
                 'tahun' => 0,
-                'bulan' => date('d-M-Y') ,//(float)$item->bulanregis ,
+                'bulan' => date('d-M-Y'),//(float)$item->bulanregis ,
                 'bor' => 0,
                 'alos' => 0,
                 'bto' => 0,
-                'toi' =>  0,
+                'toi' => 0,
                 'gdr' => 0,
-                'ndr' =>  0,
+                'ndr' => 0,
             );
 
             return $data10;
@@ -2077,19 +2192,19 @@ AND sp.statusenabled <> false
                     pasiendaftar_t AS pd
                 INNER JOIN ruangan_m AS ru ON ru.ID = pd.objectruanganlastfk
                 WHERE
-                    ru.objectdepartemenfk = $idDepRanap 
+                    ru.objectdepartemenfk = $idDepRanap
                     and pd.kdprofile = $idProfile
-            and (  pd.tglregistrasi < '$tglAwal' AND pd.tglpulang >= '$tglAkhir' 
+            and (  pd.tglregistrasi < '$tglAwal' AND pd.tglpulang >= '$tglAkhir'
             )
             or pd.tglpulang is null
             and pd.statusenabled = true
             and pd.kdprofile = $idProfile
-           and  ru.objectdepartemenfk = $idDepRanap 
+           and  ru.objectdepartemenfk = $idDepRanap
             ) AS x"
         ));
         $lamaRawat = DB::select(DB::raw("
                         select sum(x.hari) as lamarawat, count(x.noregistrasi)as jumlahpasienpulang from (
-                        SELECT 
+                        SELECT
                             date_part('DAY', pd.tglpulang- pd.tglregistrasi) as hari ,pd.noregistrasi
                             FROM
                                     pasiendaftar_t AS pd
@@ -2097,21 +2212,21 @@ AND sp.statusenabled <> false
                             INNER JOIN ruangan_m AS ru ON ru. ID = pd.objectruanganlastfk
                             WHERE pd.kdprofile = $idProfile and
                             pd.tglpulang BETWEEN '$tglAwal'
-                              AND '$tglAkhir' 
+                              AND '$tglAkhir'
                             and pd.tglpulang is not null
                             and pd.statusenabled=true
-                            and  ru.objectdepartemenfk = $idDepRanap 
+                            and  ru.objectdepartemenfk = $idDepRanap
                             GROUP BY pd.noregistrasi,pd.tglpulang,pd.tglregistrasi
-                         -- order by pd.noregistrasi 
-                      ) as x       
+                         -- order by pd.noregistrasi
+                      ) as x
                 "));
 
 
-        $dataMeninggal = DB::select(DB::raw("select count(x.noregistrasi) as jumlahmeninggal, x.bulanregis,  
+        $dataMeninggal = DB::select(DB::raw("select count(x.noregistrasi) as jumlahmeninggal, x.bulanregis,
                 count(case when x.objectkondisipasienfk = $idKondisiPasienMeninggal then 1 end ) AS jumlahlebih48 FROM
                 (
                 select noregistrasi,to_char(tglregistrasi , 'mm')  as bulanregis ,statuskeluar,kondisipasien,objectkondisipasienfk
-                from pasiendaftar_t 
+                from pasiendaftar_t
                 join statuskeluar_m on statuskeluar_m.id =pasiendaftar_t.objectstatuskeluarfk
                 left join kondisipasien_m on kondisipasien_m.id =pasiendaftar_t.objectkondisipasienfk
                 where pasiendaftar_t.kdprofile = $idProfile and objectstatuskeluarfk = $idStatKelMeninggal
@@ -2122,15 +2237,15 @@ AND sp.statusenabled <> false
 //        return $this->respond($dataMeninggal);
         $year = Carbon::now()->year;
         $num_of_days = [];
-        if($year == date('Y'))
+        if ($year == date('Y'))
             $total_month = date('m');
         else
             $total_month = 12;
 
-        for($m=1; $m<=$total_month; $m++){
+        for ($m = 1; $m <= $total_month; $m++) {
             $num_of_days[] = array(
-                'bulan' =>  $m,
-                'jumlahhari' =>  cal_days_in_month(CAL_GREGORIAN, $m, $year),
+                'bulan' => $m,
+                'jumlahhari' => cal_days_in_month(CAL_GREGORIAN, $m, $year),
             );
         }
         $bor = 0;
@@ -2143,25 +2258,25 @@ AND sp.statusenabled <> false
         $jmlPasienPlg = 0;
         $jmlLamaRawat = 0;
         $jmlMeninggal = 0;
-        $jmlMatilebih48=0;
-        foreach ($hariPerawatan as $item){
-            foreach ($lamaRawat as $itemLamaRawat){
+        $jmlMatilebih48 = 0;
+        foreach ($hariPerawatan as $item) {
+            foreach ($lamaRawat as $itemLamaRawat) {
                 foreach ($dataMeninggal as $itemDead) {
 //                         if ($item->bulanregis == $itemLamaRawat->bulanpulang &&
 //                             $itemLamaRawat->bulanpulang == $itemDead->bulanregis ) {
                     /** @var  $gdr = (Jumlah Mati dibagi Jumlah pasien Keluar (Hidup dan Mati) */
-                    $gdr = (int) $itemDead->jumlahmeninggal * 1000 /(int)$itemLamaRawat->jumlahpasienpulang ;
+                    $gdr = (int)$itemDead->jumlahmeninggal * 1000 / (int)$itemLamaRawat->jumlahpasienpulang;
                     /** @var  $NDR = (Jumlah Mati > 48 Jam dibagi Jumlah pasien Keluar (Hidup dan Mati) */
-                    $ndr = (int) $itemDead->jumlahlebih48 * 1000 /(int)$itemLamaRawat->jumlahpasienpulang ;
+                    $ndr = (int)$itemDead->jumlahlebih48 * 1000 / (int)$itemLamaRawat->jumlahpasienpulang;
 
-                    $jmlMeninggal = (int) $itemDead->jumlahmeninggal ;
-                    $jmlMatilebih48= (int) $itemDead->jumlahlebih48;
+                    $jmlMeninggal = (int)$itemDead->jumlahmeninggal;
+                    $jmlMatilebih48 = (int)$itemDead->jumlahlebih48;
 //                         }
                 }
 //                if ($item->bulanregis == $itemLamaRawat->bulanpulang ) {
                 /** @var  $alos = (Jumlah Lama Dirawat dibagi Jumlah pasien Keluar (Hidup dan Mati) */
 //                return $this->respond($itemLamaRawat->jumlahpasienpulang );
-                if ( (int)$itemLamaRawat->jumlahpasienpulang > 0){
+                if ((int)$itemLamaRawat->jumlahpasienpulang > 0) {
                     $alos = (int)$itemLamaRawat->lamarawat / (int)$itemLamaRawat->jumlahpasienpulang;
                 }
 
@@ -2172,11 +2287,11 @@ AND sp.statusenabled <> false
 //                foreach ($num_of_days as $numday){
 //                    if ($numday['bulan'] == $item->bulanregis){
                 /** @var  $bor = (Jumlah hari perawatn RS dibagi ( jumlah TT x Jumlah hari dalam satu periode ) ) x 100 % */
-                $bor = ( (int)$item->jumlahhariperawatan * 100 / ($jumlahTT *  (float)$sehari ));//$numday['jumlahhari']));
-                /** @var  $toi = (Jumlah TT X Periode) - Hari Perawatn DIBAGI Jumlah pasien Keluar (Hidup dan Mati)*/
+                $bor = ((int)$item->jumlahhariperawatan * 100 / ($jumlahTT * (float)$sehari));//$numday['jumlahhari']));
+                /** @var  $toi = (Jumlah TT X Periode) - Hari Perawatn DIBAGI Jumlah pasien Keluar (Hidup dan Mati) */
 //                        $toi = ( ( $jumlahTT * $numday['jumlahhari'] )- (int)$item->jumlahhariperawatan ) /(int)$itemLamaRawat->jumlahpasienpulang ;
-                if ( (int)$itemLamaRawat->jumlahpasienpulang > 0){
-                    $toi = ( ( $jumlahTT * (float)$sehari)- (int)$item->jumlahhariperawatan ) /(int)$itemLamaRawat->jumlahpasienpulang ;
+                if ((int)$itemLamaRawat->jumlahpasienpulang > 0) {
+                    $toi = (($jumlahTT * (float)$sehari) - (int)$item->jumlahhariperawatan) / (int)$itemLamaRawat->jumlahpasienpulang;
                 }
                 $hariPerawatanJml = (int)$item->jumlahhariperawatan;
                 $jmlPasienPlg = (int)$itemLamaRawat->jumlahpasienpulang;
@@ -2185,33 +2300,35 @@ AND sp.statusenabled <> false
             }
 
             $data10[] = array(
-                'lamarawat'=>(int)$itemLamaRawat->lamarawat,
+                'lamarawat' => (int)$itemLamaRawat->lamarawat,
                 'hariperawatan' => $hariPerawatanJml,
                 'pasienpulang' => $jmlPasienPlg,
                 'meninggal' => $jmlMeninggal,
-                'matilebih48' =>  $jmlMatilebih48,
+                'matilebih48' => $jmlMatilebih48,
                 'tahun' => $tahun,
-                'bulan' => date('d-M-Y') ,//(float)$item->bulanregis ,
-                'bor' =>(float) number_format($bor,2),
-                'alos' =>(float) number_format($alos,2),
-                'bto' =>(float) number_format($bto,2),
-                'toi' => (float)number_format($toi,2),
-                'gdr' => (float)number_format($gdr,2),
-                'ndr' => (float) number_format($ndr,2),
+                'bulan' => date('d-M-Y'),//(float)$item->bulanregis ,
+                'bor' => (float)number_format($bor, 2),
+                'alos' => (float)number_format($alos, 2),
+                'bto' => (float)number_format($bto, 2),
+                'toi' => (float)number_format($toi, 2),
+                'gdr' => (float)number_format($gdr, 2),
+                'ndr' => (float)number_format($ndr, 2),
             );
         }
 //        dd($data10);
         return $data10;
 
     }
-    public  function getTopDiagByKec(Request $r){
+
+    public function getTopDiagByKec(Request $r)
+    {
         $idProfile = $_SESSION['kdProfile'];
         // $dataLogin = $request->all();
-        $tglAwal =$r['tglawal'].' 00:00';
-        $tglAkhir =$r['tglakhir'].' 23:59';
+        $tglAwal = $r['tglawal'] . ' 00:00';
+        $tglAkhir = $r['tglakhir'] . ' 23:59';
         $bulan = Carbon::now()->format('F');
         $paramProp = '';
-        $paramKota ='';
+        $paramKota = '';
         $paramKec = '';
 //        if(isset($request['propinsiId']) && $request['propinsiId']!=''&& $request['propinsiId']!='undefined'){
 //            $paramProp = ' and pro.id='.$request['propinsiId'];
@@ -2219,12 +2336,12 @@ AND sp.statusenabled <> false
 //        if(isset($request['kotaId']) && $request['kotaId']!=''&& $request['kotaId']!='undefined'){
 //            $paramKota = ' and kot.id='.$request['kotaId'];
 //        }
-        if(isset($r['id']) && $r['id']!='' && $r['id']!='undefined'){
-            $paramKec = ' and kec.id='.$r['id'];
+        if (isset($r['id']) && $r['id'] != '' && $r['id'] != 'undefined') {
+            $paramKec = ' and kec.id=' . $r['id'];
         }
         $data = DB::select(DB::raw("select * from (
                 select count(x.kddiagnosa)as jumlah,x.kddiagnosa,x.namadiagnosa
-                from (select dm.kddiagnosa, 
+                from (select dm.kddiagnosa,
                 dm.namadiagnosa
                 from antrianpasiendiperiksa_t as app
                 left join diagnosapasien_t as dp on dp.noregistrasifk = app.norec
@@ -2237,31 +2354,31 @@ AND sp.statusenabled <> false
                 left join kotakabupaten_m as kot on kot.id = alm.objectkotakabupatenfk
                 left join propinsi_m as pro on pro.id = alm.objectpropinsifk
                 left join ruangan_m as ru on ru.id = pd.objectruanganlastfk
-                where app.kdprofile = $idProfile and dm.kddiagnosa <> '-'  and   pd.statusenabled=true and               
+                where app.kdprofile = $idProfile and dm.kddiagnosa <> '-'  and   pd.statusenabled=true and
                 pd.tglregistrasi BETWEEN '$tglAwal' AND '$tglAkhir'
                 $paramProp
-                $paramKota 
+                $paramKota
                  $paramKec
 
-                )as x GROUP BY x.namadiagnosa ,x.kddiagnosa 
+                )as x GROUP BY x.namadiagnosa ,x.kddiagnosa
                 ) as z
                 ORDER BY z.jumlah desc  limit 10
 
             "));
-        if (count($data)>0){
-            foreach ($data as $item){
+        if (count($data) > 0) {
+            foreach ($data as $item) {
                 $result[] = array(
-                    'jumlah' =>$item->jumlah,
-                    'kd' => $item->kddiagnosa ,
-                    'kddiagnosa' => $item->kddiagnosa .'-'.$item->namadiagnosa  ,
+                    'jumlah' => $item->jumlah,
+                    'kd' => $item->kddiagnosa,
+                    'kddiagnosa' => $item->kddiagnosa . '-' . $item->namadiagnosa,
                     'namadiagnosa' => $item->namadiagnosa,
                 );
             }
 
-        }else{
+        } else {
             $result[] = array(
                 'jumlah' => 0,
-                'kd' => null ,
+                'kd' => null,
                 'kddiagnosa' => null,
                 'namadiagnosa' => null
             );
@@ -2274,17 +2391,19 @@ AND sp.statusenabled <> false
         );
         return $result;
     }
-    public static function getTopTenDiagnosa($tglAwal,$tglAkhir,$kdProfile,$prov = null){
-        $idProfile = (int) $kdProfile;
+
+    public static function getTopTenDiagnosa($tglAwal, $tglAkhir, $kdProfile, $prov = null)
+    {
+        $idProfile = (int)$kdProfile;
         // $dataLogin = $request->all();
-        $tglAwal =$tglAwal.' 00:00';
-        $tglAkhir = $tglAkhir.' 23:59';
+        $tglAwal = $tglAwal . ' 00:00';
+        $tglAkhir = $tglAkhir . ' 23:59';
         $bulan = Carbon::now()->format('F');
         $paramProp = '';
-        $paramKota ='';
+        $paramKota = '';
         $paramKec = '';
-        if($prov !=null){
-            $paramProp = ' and pro.id='.$prov;
+        if ($prov != null) {
+            $paramProp = ' and pro.id=' . $prov;
         }
 //        if(isset($request['kotaId']) && $request['kotaId']!=''&& $request['kotaId']!='undefined'){
 //            $paramKota = ' and kot.id='.$request['kotaId'];
@@ -2294,7 +2413,7 @@ AND sp.statusenabled <> false
 //        }
         $data = DB::select(DB::raw("select * from (
                 select count(x.kddiagnosa)as jumlah,x.kddiagnosa,x.namadiagnosa
-                from (select dm.kddiagnosa, 
+                from (select dm.kddiagnosa,
                 dm.namadiagnosa
                 from antrianpasiendiperiksa_t as app
                 left join diagnosapasien_t as dp on dp.noregistrasifk = app.norec
@@ -2307,31 +2426,31 @@ AND sp.statusenabled <> false
                 left join kotakabupaten_m as kot on kot.id = alm.objectkotakabupatenfk
                 left join propinsi_m as pro on pro.id = alm.objectpropinsifk
                 left join ruangan_m as ru on ru.id = pd.objectruanganlastfk
-                where app.kdprofile = $idProfile and dm.kddiagnosa <> '-'  and   pd.statusenabled=true and               
+                where app.kdprofile = $idProfile and dm.kddiagnosa <> '-'  and   pd.statusenabled=true and
                 pd.tglregistrasi BETWEEN '$tglAwal' AND '$tglAkhir'
                 $paramProp
-                $paramKota 
+                $paramKota
                  $paramKec
 
-                )as x GROUP BY x.namadiagnosa ,x.kddiagnosa 
+                )as x GROUP BY x.namadiagnosa ,x.kddiagnosa
                 ) as z
                 ORDER BY z.jumlah desc  limit 10
 
             "));
-        if (count($data)>0){
-            foreach ($data as $item){
+        if (count($data) > 0) {
+            foreach ($data as $item) {
                 $result[] = array(
-                    'jumlah' =>$item->jumlah,
-                    'kd' => $item->kddiagnosa ,
-                    'kddiagnosa' => $item->kddiagnosa .'-'.$item->namadiagnosa  ,
+                    'jumlah' => $item->jumlah,
+                    'kd' => $item->kddiagnosa,
+                    'kddiagnosa' => $item->kddiagnosa . '-' . $item->namadiagnosa,
                     'namadiagnosa' => $item->namadiagnosa,
                 );
             }
 
-        }else{
+        } else {
             $result[] = array(
                 'jumlah' => 0,
-                'kd' => null ,
+                'kd' => null,
                 'kddiagnosa' => null,
                 'namadiagnosa' => null
             );
@@ -2344,32 +2463,34 @@ AND sp.statusenabled <> false
         );
         return $result;
     }
-    public static function getKunjunganRuanganRawatInap($tglAwal,$tglAkhir,$kdProfile){
 
-        $idProfile = (int) $kdProfile;
+    public static function getKunjunganRuanganRawatInap($tglAwal, $tglAkhir, $kdProfile)
+    {
+
+        $idProfile = (int)$kdProfile;
         $depInap = 16;
-        $tglAwal =$tglAwal.' 00:00'; //Carbon::now()->startOfMonth()->subMonth(1);
-        $tglAkhir = $tglAkhir.' 23:59';
+        $tglAwal = $tglAwal . ' 00:00'; //Carbon::now()->startOfMonth()->subMonth(1);
+        $tglAkhir = $tglAkhir . ' 23:59';
         $bulan = Carbon::now()->format('F');
-        $idDepRanap = (int) static::settingDataFixed2('idDepRawatInap', $idProfile);
+        $idDepRanap = (int)static::settingDataFixed2('idDepRawatInap', $idProfile);
         $data = DB::select(DB::raw("SELECT
                         COUNT (z.kdruangan) AS jumlah,
                         z.namaruangan
                        FROM
                         (
                             select pd.noregistrasi, pd.tglregistrasi, ru.namaruangan, ru.id as kdruangan
-                            from pasiendaftar_t as pd 
-                            --left join registrasipelayananpasien_t as rpp on rpp.noregistrasifk = pd.norec 
-                            left join ruangan_m as ru on ru.id = pd.objectruanganlastfk 
-                            where pd.kdprofile = $idProfile and ru.objectdepartemenfk = $idDepRanap 
-                            and pd.statusenabled = true 
-                            and (  pd.tglregistrasi < '$tglAwal' AND pd.tglpulang >= '$tglAkhir' 
+                            from pasiendaftar_t as pd
+                            --left join registrasipelayananpasien_t as rpp on rpp.noregistrasifk = pd.norec
+                            left join ruangan_m as ru on ru.id = pd.objectruanganlastfk
+                            where pd.kdprofile = $idProfile and ru.objectdepartemenfk = $idDepRanap
+                            and pd.statusenabled = true
+                            and (  pd.tglregistrasi < '$tglAwal' AND pd.tglpulang >= '$tglAkhir'
                            )
                             or pd.tglpulang is null
-                            and pd.kdprofile = $idProfile and ru.objectdepartemenfk = $idDepRanap 
-                            and pd.statusenabled = true 
+                            and pd.kdprofile = $idProfile and ru.objectdepartemenfk = $idDepRanap
+                            and pd.statusenabled = true
                             group by pd.tglregistrasi, pd.noregistrasi, ru.namaruangan, ru.id
-                           
+
                         ) AS z
                     GROUP BY
                         z.namaruangan
@@ -2383,7 +2504,9 @@ AND sp.statusenabled <> false
         );
         return $data;
     }
-    public function getKecByProv(Request $r){
+
+    public function getKecByProv(Request $r)
+    {
         return DB::select(DB::raw("select kb.id as kbid,kb.namakotakabupaten,
             kk.id as kecid, kk.namakecamatan
              from kotakabupaten_m kb
@@ -2391,13 +2514,15 @@ AND sp.statusenabled <> false
             where kb.objectpropinsifk in (select id from propinsi_m where kdmap='$r[kdmap]')
             order by kk.namakecamatan"));
     }
-    public static function getKunjunganPerJenisPelayanan ($tglAwal,$tglAkhir,$kdProfile){
 
-        $idProfile = (int) $kdProfile;
-        $JenisPelayananReg = static::settingDataFixed2('KdJenisPelayananReg',$idProfile);
-        $JenisPelayananEks = static::settingDataFixed2('KdJenisPelayananEks',$idProfile);
-        $tglAwal = $tglAwal.' 00:00'; //Carbon::now()->startOfMonth()->subMonth(1);
-        $tglAkhir =$tglAkhir.' 23:59';
+    public static function getKunjunganPerJenisPelayanan($tglAwal, $tglAkhir, $kdProfile)
+    {
+
+        $idProfile = (int)$kdProfile;
+        $JenisPelayananReg = static::settingDataFixed2('KdJenisPelayananReg', $idProfile);
+        $JenisPelayananEks = static::settingDataFixed2('KdJenisPelayananEks', $idProfile);
+        $tglAwal = $tglAwal . ' 00:00'; //Carbon::now()->startOfMonth()->subMonth(1);
+        $tglAkhir = $tglAkhir . ' 23:59';
         $data = DB::select(DB::raw("
             SELECT dp.id,
             dp.namadepartemen,
@@ -2410,14 +2535,14 @@ AND sp.statusenabled <> false
             JOIN departemen_m AS dp ON dp. ID = ru.objectdepartemenfk
             WHERE pd.kdprofile = $idProfile and
             pd.tglregistrasi BETWEEN '$tglAwal'
-        
+
             AND '$tglAkhir'
             and pd.statusenabled=true
         "));
-        $data10=[];
-        $data20=[];
-        $reguler=0;
-        $eksekutif=0;
+        $data10 = [];
+        $data20 = [];
+        $reguler = 0;
+        $eksekutif = 0;
         if (count($data) > 0) {
             foreach ($data as $item) {
                 $sama = false;
@@ -2465,17 +2590,19 @@ AND sp.statusenabled <> false
             }
         }
         $result = array(
-            'data'=> $data10 ,
+            'data' => $data10,
             'jml' => count($data),
         );
         return $result;
     }
-    public static function getTopTenAsalPerujukBPJS($tglAwal,$tglAkhir,$kdProfile){
 
-        $idProfile = (int) $kdProfile;
-        $IdBPJS=2;
-        $tglAwal =$tglAwal.' 00:00'; //Carbon::now()->startOfMonth()->subMonth(1);
-        $tglAkhir = $tglAkhir.' 23:59';
+    public static function getTopTenAsalPerujukBPJS($tglAwal, $tglAkhir, $kdProfile)
+    {
+
+        $idProfile = (int)$kdProfile;
+        $IdBPJS = 2;
+        $tglAwal = $tglAwal . ' 00:00'; //Carbon::now()->startOfMonth()->subMonth(1);
+        $tglAkhir = $tglAkhir . ' 23:59';
         $bulan = Carbon::now()->format('F');
         $data = DB::select(DB::raw("SELECT * FROM
             (
@@ -2487,7 +2614,7 @@ AND sp.statusenabled <> false
                 LEFT JOIN pemakaianasuransi_t AS pa ON pa.noregistrasifk = pd.norec
                 LEFT JOIN asuransipasien_m AS ap ON ap. ID = pa.objectasuransipasienfk
                 WHERE pd.kdprofile = $idProfile and pd.tglregistrasi BETWEEN '$tglAwal' AND '$tglAkhir'
-                AND pd.objectkelompokpasienlastfk in (2,4,10) 
+                AND pd.objectkelompokpasienlastfk in (2,4,10)
                 and   pd.statusenabled=true
                 -- and ap.kdprovider  <> ''
                 -- and ap.kdprovider  <> '-'
@@ -2497,10 +2624,10 @@ AND sp.statusenabled <> false
           ORDER BY
           z.jumlah DESC
          "));
-        if (count($data) > 0){
-            $result = $data ;
-        }else{
-            $result []= array(
+        if (count($data) > 0) {
+            $result = $data;
+        } else {
+            $result [] = array(
                 'jumlah' => 0,
                 'kodeppkrujukan' => null,
                 'ppkrujukan' => null,
@@ -2514,11 +2641,13 @@ AND sp.statusenabled <> false
         );
         return $result;
     }
-    public function getTempatTidurTerpakai($tglAwal ,$tglAkhir,$kdProfile){
-        $idProfile = (int) $kdProfile;
-        $idDepRanap = (int) $this->settingDataFixed('idDepRawatInap', $idProfile);
-        $tglAwal = $tglAwal .' 00:00' ;
-        $tglAkhir = $tglAkhir.' 23:59' ;
+
+    public function getTempatTidurTerpakai($tglAwal, $tglAkhir, $kdProfile)
+    {
+        $idProfile = (int)$kdProfile;
+        $idDepRanap = (int)$this->settingDataFixed('idDepRawatInap', $idProfile);
+        $tglAwal = $tglAwal . ' 00:00';
+        $tglAkhir = $tglAkhir . ' 23:59';
         $paramDep = '';
         $data = DB::select(DB::raw("SELECT
                 pd.noregistrasi,
@@ -2533,11 +2662,11 @@ AND sp.statusenabled <> false
             LEFT JOIN pasien_m AS ps ON ps.id = pd.nocmfk
             LEFT JOIN jeniskelamin_m AS jk ON jk.id = ps.objectjeniskelaminfk
             LEFT JOIN ruangan_m AS ru ON ru.id = pd.objectruanganlastfk
-            
-            WHERE pd.kdprofile = $idProfile 
-                $paramDep 
+
+            WHERE pd.kdprofile = $idProfile
+                $paramDep
                  and pd.statusenabled = true
-                and (pd.tglregistrasi < '$tglAwal' AND pd.tglpulang >= '$tglAkhir' 
+                and (pd.tglregistrasi < '$tglAwal' AND pd.tglpulang >= '$tglAkhir'
                 )
                 or pd.tglpulang is null and pd.kdprofile=$idProfile
                 and pd.statusenabled = true
@@ -2575,16 +2704,16 @@ AND sp.statusenabled <> false
             //7.Lansia Awal= 46 –55.
             //8.Lansia Akhir= 56 –65.
             //9.Manula= 65 –atas
-            if ($item->objectjeniskelaminfk == 1 && (float)$item->umur >= 0  && (float)$item->umur <= 5) {
+            if ($item->objectjeniskelaminfk == 1 && (float)$item->umur >= 0 && (float)$item->umur <= 5) {
                 $L_balita = (float)$L_balita + 1;
             }
-            if ($item->objectjeniskelaminfk == 2 &&  (float)$item->umur >= 0  && (float)$item->umur <= 5) {
+            if ($item->objectjeniskelaminfk == 2 && (float)$item->umur >= 0 && (float)$item->umur <= 5) {
                 $P_balita = (float)$P_balita + 1;
             }
-            if ($item->objectjeniskelaminfk == 1 &&(float) $item->umur >= 6 && (float)$item->umur <= 11) {
+            if ($item->objectjeniskelaminfk == 1 && (float)$item->umur >= 6 && (float)$item->umur <= 11) {
                 $L_anak = (float)$L_anak + 1;
             }
-            if ($item->objectjeniskelaminfk == 2 && (float)$item->umur >= 6 &&(float) $item->umur <= 11) {
+            if ($item->objectjeniskelaminfk == 2 && (float)$item->umur >= 6 && (float)$item->umur <= 11) {
                 $P_anak = (float)$P_anak + 1;
             }
             if ($item->objectjeniskelaminfk == 1 && (float)$item->umur >= 12 && (float)$item->umur <= 16) {
@@ -2668,36 +2797,38 @@ AND sp.statusenabled <> false
         //7.Lansia Awal= 46 –55.
         //8.Lansia Akhir= 56 –65.
         //9.Manula= 65 –atas
-        $result [] = ['name' => 'Balita Perempuan','umur'=>'0 - 5 Tahun','jml' => $P_balita ,'img'=>'images/BayiPerempuan.png' ];
-        $result [] = ['name' => 'Balita Laki-laki','umur'=>'0 - 5 Tahun','jml' => $L_balita ,'img'=>'images/BayiLaki-Laki.png' ];
-        $result [] = ['name' => 'Anak Perempuan','umur'=>'6 - 11 Tahun','jml' => $P_anak ,'img'=>'images/AnakPerempuan.png' ];
-        $result [] = ['name' => 'Anak Laki-laki','umur'=>'6 - 11 Tahun','jml' => $L_anak ,'img'=>'images/AnakLaki-Laki.png' ];
-        $result [] = ['name' => 'Remaja Perempuan','umur'=>'12 - 25 Tahun','jml' => $P_remajaAwal + $P_remajaAkhir ,'img'=>'images/RemajaPerempuan.png' ];
-        $result [] = ['name' => 'Remaja Laki-laki','umur'=>'12 - 25 Tahun','jml' => $L_remajaAwal + $L_remajaAkhir ,'img'=>'images/RemajaLaki-Laki.png' ];
-        $result [] = ['name' => 'Dewasa Perempuan','umur'=>'26 - 45 Tahun','jml' => $P_dewasaAwal+ $P_dewasaAkhir  ,'img'=>'images/DewasaPerempuan.png' ];
-        $result [] = ['name' => 'Dewasa Laki-laki','umur'=>'26 - 45 Tahun','jml' => $L_dewasaAwal+ $L_dewasaAkhir  ,'img'=>'images/DewasaLaki-Laki.png' ];
-        $result [] = ['name' => 'Lansia Perempuan','umur'=>'46 - 65 Tahun','jml' => $P_lansiaAwal+ $P_lansiaakhir,'img'=>'images/Nenek2.png' ];
-        $result [] = ['name' => 'Lansia Laki-laki','umur'=>'46 - 65 Tahun','jml' =>  $L_lansiaAwal+ $L_lansiaakhir ,'img'=>'images/Kakek2.png' ];
-        $result [] = ['name' => 'Manula Perempuan','umur'=>'> 65 Tahun','jml' => $P_manula,'img'=>'images/Nenek.png' ];
-        $result [] = ['name' => 'Manula Laki-laki','umur'=>'> 65 Tahun','jml' => $L_manula ,'img'=>'images/Kakek.png' ];
+        $result [] = ['name' => 'Balita Perempuan', 'umur' => '0 - 5 Tahun', 'jml' => $P_balita, 'img' => 'images/BayiPerempuan.png'];
+        $result [] = ['name' => 'Balita Laki-laki', 'umur' => '0 - 5 Tahun', 'jml' => $L_balita, 'img' => 'images/BayiLaki-Laki.png'];
+        $result [] = ['name' => 'Anak Perempuan', 'umur' => '6 - 11 Tahun', 'jml' => $P_anak, 'img' => 'images/AnakPerempuan.png'];
+        $result [] = ['name' => 'Anak Laki-laki', 'umur' => '6 - 11 Tahun', 'jml' => $L_anak, 'img' => 'images/AnakLaki-Laki.png'];
+        $result [] = ['name' => 'Remaja Perempuan', 'umur' => '12 - 25 Tahun', 'jml' => $P_remajaAwal + $P_remajaAkhir, 'img' => 'images/RemajaPerempuan.png'];
+        $result [] = ['name' => 'Remaja Laki-laki', 'umur' => '12 - 25 Tahun', 'jml' => $L_remajaAwal + $L_remajaAkhir, 'img' => 'images/RemajaLaki-Laki.png'];
+        $result [] = ['name' => 'Dewasa Perempuan', 'umur' => '26 - 45 Tahun', 'jml' => $P_dewasaAwal + $P_dewasaAkhir, 'img' => 'images/DewasaPerempuan.png'];
+        $result [] = ['name' => 'Dewasa Laki-laki', 'umur' => '26 - 45 Tahun', 'jml' => $L_dewasaAwal + $L_dewasaAkhir, 'img' => 'images/DewasaLaki-Laki.png'];
+        $result [] = ['name' => 'Lansia Perempuan', 'umur' => '46 - 65 Tahun', 'jml' => $P_lansiaAwal + $P_lansiaakhir, 'img' => 'images/Nenek2.png'];
+        $result [] = ['name' => 'Lansia Laki-laki', 'umur' => '46 - 65 Tahun', 'jml' => $L_lansiaAwal + $L_lansiaakhir, 'img' => 'images/Kakek2.png'];
+        $result [] = ['name' => 'Manula Perempuan', 'umur' => '> 65 Tahun', 'jml' => $P_manula, 'img' => 'images/Nenek.png'];
+        $result [] = ['name' => 'Manula Laki-laki', 'umur' => '> 65 Tahun', 'jml' => $L_manula, 'img' => 'images/Kakek.png'];
 
 //        dd($result);
         return $result;
     }
-    public function getKunjunganRSPerJenisPasien($tglAwal, $tglAkhir,$kdProfile){
 
-        $idProfile = (int) $kdProfile;
-        $kdKelompokPasienUmum = (int) $this->settingDataFixed('KdKelompokPasienUmum',$idProfile);
-        $KelompokPasienBpjs = (int) $this->settingDataFixed('KdKelPasienBpjs', $idProfile);
-        $KelompokPasienAsuransi = (int) $this->settingDataFixed('KdKelompokPasienAsuransi', $idProfile);
-        $KdKelPasienPerusahaan = (int) $this->settingDataFixed('KdKelPasienPerusahaan', $idProfile);
-        $KdKelPasienPerjanjian = (int) $this->settingDataFixed('KdKelPasienPerjanjian', $idProfile);
-        $tglAwal = $tglAwal .' 00:00' ;
-        $tglAkhir = $tglAkhir.' 23:59' ;
+    public function getKunjunganRSPerJenisPasien($tglAwal, $tglAkhir, $kdProfile)
+    {
+
+        $idProfile = (int)$kdProfile;
+        $kdKelompokPasienUmum = (int)$this->settingDataFixed('KdKelompokPasienUmum', $idProfile);
+        $KelompokPasienBpjs = (int)$this->settingDataFixed('KdKelPasienBpjs', $idProfile);
+        $KelompokPasienAsuransi = (int)$this->settingDataFixed('KdKelompokPasienAsuransi', $idProfile);
+        $KdKelPasienPerusahaan = (int)$this->settingDataFixed('KdKelPasienPerusahaan', $idProfile);
+        $KdKelPasienPerjanjian = (int)$this->settingDataFixed('KdKelPasienPerjanjian', $idProfile);
+        $tglAwal = $tglAwal . ' 00:00';
+        $tglAkhir = $tglAkhir . ' 23:59';
         $dataALL = DB::select(DB::raw("select x.kelompokpasien ,count(x.kelompokpasien) as jumlah from (
-                select pd.noregistrasi, 
-                 kps.kelompokpasien, 
-                 pd.objectkelompokpasienlastfk, 
+                select pd.noregistrasi,
+                 kps.kelompokpasien,
+                 pd.objectkelompokpasienlastfk,
                to_char (pd.tglregistrasi,'YYYY') as tahunregis
                  from pasiendaftar_t as pd
                  inner join kelompokpasien_m as kps on kps.id = pd.objectkelompokpasienlastfk
@@ -2710,26 +2841,26 @@ AND sp.statusenabled <> false
 
 
         $data = \DB::table('pasiendaftar_t as pd')
-            ->join('kelompokpasien_m as kps','kps.id','=','pd.objectkelompokpasienlastfk')
-            ->join('ruangan_m as ru','ru.id','=','pd.objectruanganlastfk')
-            ->join('departemen_m as dp','dp.id','=','ru.objectdepartemenfk')
-            ->select('pd.noregistrasi','kps.kelompokpasien',
-                'pd.objectkelompokpasienlastfk','dp.id',
+            ->join('kelompokpasien_m as kps', 'kps.id', '=', 'pd.objectkelompokpasienlastfk')
+            ->join('ruangan_m as ru', 'ru.id', '=', 'pd.objectruanganlastfk')
+            ->join('departemen_m as dp', 'dp.id', '=', 'ru.objectdepartemenfk')
+            ->select('pd.noregistrasi', 'kps.kelompokpasien',
+                'pd.objectkelompokpasienlastfk', 'dp.id',
                 'dp.namadepartemen',
                 'pd.norec as norec_pd',
                 DB::raw("to_char (pd.tglregistrasi,'YYYY') as tahunregis"))
-            ->where('pd.kdprofile',$idProfile)
-            ->where('pd.statusenabled',true)
-            ->whereBetween('pd.tglregistrasi',[ $tglAwal, $tglAkhir ]);
+            ->where('pd.kdprofile', $idProfile)
+            ->where('pd.statusenabled', true)
+            ->whereBetween('pd.tglregistrasi', [$tglAwal, $tglAkhir]);
 
-        $data = $data ->get();
+        $data = $data->get();
 
-        $data10=[];
-        $jmlBPJS  = 0;
-        $jmlAsuransiLain  = 0;
-        $jmlPerusahaan  = 0;
-        $jmlUmum  = 0;
-        $jmlPerjanjian  = 0;
+        $data10 = [];
+        $jmlBPJS = 0;
+        $jmlAsuransiLain = 0;
+        $jmlPerusahaan = 0;
+        $jmlUmum = 0;
+        $jmlPerjanjian = 0;
 //         if (count($data) > 0) {
         foreach ($data as $item) {
             $sama = false;
@@ -2759,39 +2890,39 @@ AND sp.statusenabled <> false
             }
             if ($sama == false) {
                 if ($item->objectkelompokpasienlastfk == $kdKelompokPasienUmum) {
-                    $jmlBPJS  = 0;
-                    $jmlAsuransiLain  = 0;
-                    $jmlPerusahaan  = 0;
-                    $jmlUmum  = 1;
-                    $jmlPerjanjian  = 0;
+                    $jmlBPJS = 0;
+                    $jmlAsuransiLain = 0;
+                    $jmlPerusahaan = 0;
+                    $jmlUmum = 1;
+                    $jmlPerjanjian = 0;
                 }
                 if ($item->objectkelompokpasienlastfk == $KelompokPasienBpjs) {
-                    $jmlBPJS  = 1;
-                    $jmlAsuransiLain  = 0;
-                    $jmlPerusahaan  = 0;
-                    $jmlUmum  = 0;
-                    $jmlPerjanjian  = 0;
+                    $jmlBPJS = 1;
+                    $jmlAsuransiLain = 0;
+                    $jmlPerusahaan = 0;
+                    $jmlUmum = 0;
+                    $jmlPerjanjian = 0;
                 }
                 if ($item->objectkelompokpasienlastfk == $KelompokPasienAsuransi) {
-                    $jmlBPJS  = 0;
-                    $jmlAsuransiLain  = 1;
-                    $jmlPerusahaan  = 0;
-                    $jmlUmum  = 0;
-                    $jmlPerjanjian  = 0;
+                    $jmlBPJS = 0;
+                    $jmlAsuransiLain = 1;
+                    $jmlPerusahaan = 0;
+                    $jmlUmum = 0;
+                    $jmlPerjanjian = 0;
                 }
                 if ($item->objectkelompokpasienlastfk == $KdKelPasienPerusahaan) {
-                    $jmlBPJS  = 0;
-                    $jmlAsuransiLain  = 0;
-                    $jmlPerusahaan  = 1;
-                    $jmlUmum  = 0;
-                    $jmlPerjanjian  = 0;
+                    $jmlBPJS = 0;
+                    $jmlAsuransiLain = 0;
+                    $jmlPerusahaan = 1;
+                    $jmlUmum = 0;
+                    $jmlPerjanjian = 0;
                 }
                 if ($item->objectkelompokpasienlastfk == $KdKelPasienPerjanjian) {
-                    $jmlBPJS  = 0;
-                    $jmlAsuransiLain  = 0;
-                    $jmlPerusahaan  = 0;
-                    $jmlUmum  = 0;
-                    $jmlPerjanjian  = 1;
+                    $jmlBPJS = 0;
+                    $jmlAsuransiLain = 0;
+                    $jmlPerusahaan = 0;
+                    $jmlUmum = 0;
+                    $jmlPerjanjian = 1;
                 }
                 $data10[] = array(
                     'id' => $item->id,
@@ -2817,17 +2948,19 @@ AND sp.statusenabled <> false
         );
         return $result;
     }
-    public function getPasienPerjenisPenjadwalan($tglAwal, $tglAkhir,$kdProfile){
-        $idProfile = (int) $kdProfile;
+
+    public function getPasienPerjenisPenjadwalan($tglAwal, $tglAkhir, $kdProfile)
+    {
+        $idProfile = (int)$kdProfile;
         $idDepRaJal = (int)$this->settingDataFixed('KdDepartemenRawatJalan', $idProfile);
-        $idDepRanap = (int) $this->settingDataFixed('idDepRawatInap', $idProfile);
-        $idDepRehab = (int) $this->settingDataFixed('KdDepartemenInstalasiRehabilitasiMedik', $idProfile);
-        $idDepBedahSentral = (int) $this->settingDataFixed('KdDeptBedahSentral', $idProfile);
-        $idDepLaboratorium = (int) $this->settingDataFixed('KdDepartemenInstalasiLaboratorium',$idProfile);
-        $idDepRadiologi = (int) $this->settingDataFixed('KdDepartemenInstalasiRadiologi',$idProfile);
-        $idDepIGD = (int) $this->settingDataFixed('KdDepartemenInstalasiGawatDarurat',$idProfile);
-        $tglAwal = $tglAwal .' 00:00' ;
-        $tglAkhir = $tglAkhir.' 23:59' ;
+        $idDepRanap = (int)$this->settingDataFixed('idDepRawatInap', $idProfile);
+        $idDepRehab = (int)$this->settingDataFixed('KdDepartemenInstalasiRehabilitasiMedik', $idProfile);
+        $idDepBedahSentral = (int)$this->settingDataFixed('KdDeptBedahSentral', $idProfile);
+        $idDepLaboratorium = (int)$this->settingDataFixed('KdDepartemenInstalasiLaboratorium', $idProfile);
+        $idDepRadiologi = (int)$this->settingDataFixed('KdDepartemenInstalasiRadiologi', $idProfile);
+        $idDepIGD = (int)$this->settingDataFixed('KdDepartemenInstalasiGawatDarurat', $idProfile);
+        $tglAwal = $tglAwal . ' 00:00';
+        $tglAkhir = $tglAkhir . ' 23:59';
         $data = DB::select(DB::raw("
                                    select count(x.noregistrasi) as jumlah  ,x.keterangan,
     count (case when x.departemen = 'rawat_jalan' then 1 end) AS rawatjalan,
@@ -2855,7 +2988,7 @@ count(case when x.departemen = 'rahab_medik' then 1 end) AS rehab_medik
     left join antrianpasienregistrasi_t as apr on apr.noreservasi=pd.statusschedule
     inner JOIN ruangan_m AS ru ON ru.id = pd.objectruanganlastfk
     WHERE pd.kdprofile = $idProfile and pd.tglregistrasi BETWEEN '$tglAwal'   AND '$tglAkhir'
-    ) as x  group BY x.keterangan 
+    ) as x  group BY x.keterangan
 
             "));
 
@@ -2865,13 +2998,15 @@ count(case when x.departemen = 'rahab_medik' then 1 end) AS rehab_medik
 
         return $res;
     }
-    public function getInfoKunjunganRawatJalanPerhari($tglAwal, $tglAkhir,$kdProfile){
-        $idProfile = (int) $kdProfile;
+
+    public function getInfoKunjunganRawatJalanPerhari($tglAwal, $tglAkhir, $kdProfile)
+    {
+        $idProfile = (int)$kdProfile;
         $idDepRaJal = (int)$this->settingDataFixed('KdDepartemenRawatJalan', $idProfile);
-        $tglAwal = $tglAwal .' 00:00' ;
-        $tglAkhir = $tglAkhir.' 23:59' ;
+        $tglAwal = $tglAwal . ' 00:00';
+        $tglAkhir = $tglAkhir . ' 23:59';
         $data = DB::select(DB::raw("
-        
+
                     select * from (SELECT
                     pd.noregistrasi,
                     ps.namapasien,
@@ -2879,7 +3014,7 @@ count(case when x.departemen = 'rahab_medik' then 1 end) AS rehab_medik
                     pd.nostruklastfk,
                     ru.namaruangan,
                     apd.tgldipanggilsuster,
-                    pd.objectruanganlastfk AS kdruangan,row_number() over (partition by pd.noregistrasi order by apd.tglmasuk desc) as rownum 
+                    pd.objectruanganlastfk AS kdruangan,row_number() over (partition by pd.noregistrasi order by apd.tglmasuk desc) as rownum
                     FROM
                     pasiendaftar_t AS pd
                     INNER JOIN ruangan_m AS ru ON ru.id = pd.objectruanganlastfk
@@ -2893,7 +3028,7 @@ count(case when x.departemen = 'rahab_medik' then 1 end) AS rehab_medik
                     ORDER BY
                     x.noregistrasi"));
 
-        $data10=[];
+        $data10 = [];
         $sudahPeriksa = 0;
         $belumPeriksa = 0;
         $batalRegis = 0;
@@ -2954,7 +3089,7 @@ count(case when x.departemen = 'rahab_medik' then 1 end) AS rehab_medik
                 }
                 array_multisort($count, SORT_DESC, $data10);
             }
-        }else{
+        } else {
             $data10[] = array(
                 'kdruangan' => '-',
                 'namaruangan' => 'Tidak Ada Data',
@@ -2967,7 +3102,9 @@ count(case when x.departemen = 'rahab_medik' then 1 end) AS rehab_medik
 
         return $data10;
     }
-    public function listGambar(){
+
+    public function listGambar()
+    {
         return ['images/icon-pasien.png', 'images/icon-pasien-emergency.png',
             'images/icon-pasien-rawat-inap.png', 'images/icon-radiologi.png', 'images/icon-laboratorium.png',
             'images/icon-pasien.png', 'images/icon-pasien-emergency.png',
@@ -2975,21 +3112,25 @@ count(case when x.departemen = 'rahab_medik' then 1 end) AS rehab_medik
             'images/icon-pasien.png', 'images/icon-pasien-emergency.png',
             'images/icon-pasien-rawat-inap.png', 'images/icon-radiologi.png', 'images/icon-laboratorium.png'];
     }
-    public function listWarna(){
+
+    public function listWarna()
+    {
         return [
             'bg-aqua-gradient', 'bg-green-gradient', 'bg-blue-active', 'bg-yellow-gradient', 'bg-red-gradient',
             'bg-light-blue-gradient', 'bg-maroon-gradient', 'bg-purple-gradient', 'bg-teal-gradient',
             'bg-aqua-gradient', 'bg-green-gradient', 'bg-blue-active', 'bg-yellow-gradient', 'bg-red-gradient',
             'bg-light-blue-gradient', 'bg-maroon-gradient', 'bg-purple-gradient', 'bg-teal-gradient'];
     }
-    public function  getPengunjung ($tglAwal,$tglAkhir,$kdProfile){
-        $tglAwal = $tglAwal .' 00:00' ;
-        $tglAkhir = $tglAkhir.' 23:59' ;
-        $dept = $this->settingDataFixed('kdDepartemenEIS',$kdProfile);
+
+    public function getPengunjung($tglAwal, $tglAkhir, $kdProfile)
+    {
+        $tglAwal = $tglAwal . ' 00:00';
+        $tglAkhir = $tglAkhir . ' 23:59';
+        $dept = $this->settingDataFixed('kdDepartemenEIS', $kdProfile);
         $data = DB::select(DB::raw("SELECT dp.id ,dp.namadepartemen,count(pd.norec) as jumlah
                 FROM departemen_m dp
                 join ruangan_m as ru on ru.objectdepartemenfk=dp.id
-                LEFT JOIN (SELECT pasiendaftar_t.norec,pasiendaftar_t.objectruanganlastfk 
+                LEFT JOIN (SELECT pasiendaftar_t.norec,pasiendaftar_t.objectruanganlastfk
                 FROM pasiendaftar_t
                 where tglregistrasi BETWEEN '$tglAwal' and '$tglAkhir' and pasiendaftar_t.statusenabled=true
                 and pasiendaftar_t.kdprofile=$kdProfile) pd ON (ru.id= pd.objectruanganlastfk)
@@ -3001,17 +3142,18 @@ count(case when x.departemen = 'rahab_medik' then 1 end) AS rehab_medik
         "));
         return $data;
     }
-    public function getKunjungan($tglAwal,$tglAkhir,$kdProfile)
+
+    public function getKunjungan($tglAwal, $tglAkhir, $kdProfile)
     {
-        $tglAwal = $tglAwal .' 00:00' ;
-        $tglAkhir = $tglAkhir.' 23:59' ;
+        $tglAwal = $tglAwal . ' 00:00';
+        $tglAkhir = $tglAkhir . ' 23:59';
         $idDepRanap = (int)$this->settingDataFixed('idDepRawatInap', $kdProfile);
         $dept = $this->settingDataFixed('kdDepartemenRawatJalanFix', $kdProfile);
         $data = DB::select(DB::raw("SELECT dp.id ,dp.namadepartemen,count(pd.norec) as jumlah, dp.qdepartemen
                 FROM departemen_m dp
                 join ruangan_m as ru on ru.objectdepartemenfk=dp.id
                 LEFT JOIN (SELECT antrianpasiendiperiksa_t.norec,objectruanganfk FROM antrianpasiendiperiksa_t
-                where tglregistrasi BETWEEN '$tglAwal' and '$tglAkhir' 
+                where tglregistrasi BETWEEN '$tglAwal' and '$tglAkhir'
                 and   antrianpasiendiperiksa_t.statusenabled=true
                 and antrianpasiendiperiksa_t.kdprofile=$kdProfile)
                  pd ON (ru.id= pd.objectruanganfk)
@@ -3020,19 +3162,19 @@ count(case when x.departemen = 'rahab_medik' then 1 end) AS rehab_medik
                 group by dp.namadepartemen,dp.id,dp.qdepartemen
                 order by dp.qdepartemen asc
         "));
-        $dataRanap = DB::select(DB::raw("select count(x.noregistrasi) as jumlah  
+        $dataRanap = DB::select(DB::raw("select count(x.noregistrasi) as jumlah
             from ( select  pd.noregistrasi,pd.tglregistrasi
-            from pasiendaftar_t as pd 
+            from pasiendaftar_t as pd
             inner join ruangan_m as ru on ru.id = pd.objectruanganlastfk
-            where ru.objectdepartemenfk = $idDepRanap 
+            where ru.objectdepartemenfk = $idDepRanap
             and pd.statusenabled = true
             and pd.kdprofile=$kdProfile
-            and (  pd.tglregistrasi < '$tglAwal' 
-                AND pd.tglpulang >= '$tglAkhir' 
+            and (  pd.tglregistrasi < '$tglAwal'
+                AND pd.tglpulang >= '$tglAkhir'
              ) or pd.tglpulang is null
                and pd.statusenabled = true
             and pd.kdprofile=$kdProfile
-          
+
          ) as x
             "));
         $dataFarmasi = DB::select(DB::raw("
@@ -3087,10 +3229,12 @@ count(case when x.departemen = 'rahab_medik' then 1 end) AS rehab_medik
 
         return $data10;
     }
-    public function getTrendKunjunganPasienRajal($tglAwal,$tglAkhir,$kdProfile){
-        $tglAwal = $tglAwal .' 00:00' ;
-        $tglAkhir = $tglAkhir.' 23:59' ;
-        $idProfile = (int) $kdProfile;
+
+    public function getTrendKunjunganPasienRajal($tglAwal, $tglAkhir, $kdProfile)
+    {
+        $tglAwal = $tglAwal . ' 00:00';
+        $tglAkhir = $tglAkhir . ' 23:59';
+        $idProfile = (int)$kdProfile;
         $idDepRaJal = (int)$this->settingDataFixed('KdDepartemenRawatJalan', $idProfile);
         $tglAwal = Carbon::now()->subWeek(3);//  Carbon::now()->subMonth(1);
         $tglAkhir = Carbon::now()->format('Y-m-d 23:59');
@@ -3118,7 +3262,7 @@ count(case when x.departemen = 'rahab_medik' then 1 end) AS rehab_medik
                 END AS keterangan,
                  ps.namapasien
                 ,
-                row_number() over (partition by pd.noregistrasi order by apd.tglmasuk desc) as rownum 
+                row_number() over (partition by pd.noregistrasi order by apd.tglmasuk desc) as rownum
                 FROM
                     pasiendaftar_t AS pd
                 inner join antrianpasiendiperiksa_t as apd on apd.noregistrasifk=pd.norec
@@ -3128,12 +3272,12 @@ count(case when x.departemen = 'rahab_medik' then 1 end) AS rehab_medik
                 WHERE pd.kdprofile = $idProfile and
                     pd.tglregistrasi BETWEEN  '$tglAwal'
                 AND '$tglAkhir'
-                AND ru.objectdepartemenfk = $idDepRaJal 
+                AND ru.objectdepartemenfk = $idDepRaJal
                 ) as x where x.rownum=1
                 ORDER BY
                 x.noregistrasi
         "));
-        $data10=[];
+        $data10 = [];
         $sudahPeriksa = 0;
         $belumPeriksa = 0;
         $batalRegis = 0;
@@ -3180,7 +3324,7 @@ count(case when x.departemen = 'rahab_medik' then 1 end) AS rehab_medik
                     }
                     $data10[] = array(
                         'tglregistrasi' => $item->tglregistrasi,
-                        'tanggal' =>$item->tanggal,
+                        'tanggal' => $item->tanggal,
                         'totalterdaftar' => 1,
                         'diperiksa' => $sudahPeriksa,
                         'belumperiksa' => $belumPeriksa,
@@ -3197,9 +3341,10 @@ count(case when x.departemen = 'rahab_medik' then 1 end) AS rehab_medik
         return $data10;
 
     }
-    public  function getTotalKlaim($noregistrasi,$kdProfile)
+
+    public function getTotalKlaim($noregistrasi, $kdProfile)
     {
-        $pelayanan =collect(\DB::select("select sum(x.totalppenjamin) as totalklaim
+        $pelayanan = collect(\DB::select("select sum(x.totalppenjamin) as totalklaim
          from (select spp.norec,spp.totalppenjamin
          from pasiendaftar_t as pd
             join antrianpasiendiperiksa_t as apd on apd.noregistrasifk=pd.norec
@@ -3207,22 +3352,23 @@ count(case when x.departemen = 'rahab_medik' then 1 end) AS rehab_medik
             join strukpelayanan_t as sp on sp.norec= pp.strukfk
             join strukpelayananpenjamin_t as spp on spp.nostrukfk=sp.norec
             where pd.noregistrasi ='$noregistrasi'
-        and spp.statusenabled is null 
+        and spp.statusenabled is null
         and pd.kdprofile=$kdProfile
         GROUP BY spp.norec,spp.totalppenjamin
 
         ) as x"))->first();
-        if(!empty($pelayanan) && $pelayanan->totalklaim!= null){
-            return (float) $pelayanan->totalklaim;
-        }else{
+        if (!empty($pelayanan) && $pelayanan->totalklaim != null) {
+            return (float)$pelayanan->totalklaim;
+        } else {
             return 0;
         }
 
 
     }
-    public function getTotolBayar($noregistrasi,$kdProfile)
+
+    public function getTotolBayar($noregistrasi, $kdProfile)
     {
-        $pelayanan =collect(\DB::select("select sum(x.totaldibayar) as totaldibayar
+        $pelayanan = collect(\DB::select("select sum(x.totaldibayar) as totaldibayar
          from (select sbm.norec,sbm.totaldibayar
          from pasiendaftar_t as pd
         join antrianpasiendiperiksa_t as apd on apd.noregistrasifk=pd.norec
@@ -3230,42 +3376,46 @@ count(case when x.departemen = 'rahab_medik' then 1 end) AS rehab_medik
         join strukpelayanan_t as sp on sp.norec= pp.strukfk
         join strukbuktipenerimaan_t as sbm on sbm.nostrukfk = sp.norec
         where pd.noregistrasi ='$noregistrasi'
-        and sp.statusenabled is null 
+        and sp.statusenabled is null
         and sbm.statusenabled =true
         and pd.kdprofile=$kdProfile
         GROUP BY sbm.norec,sbm.totaldibayar
 
         ) as x"))->first();
-        if(!empty($pelayanan) && $pelayanan->totaldibayar!= null){
-            return (float) $pelayanan->totaldibayar;
-        }else{
+        if (!empty($pelayanan) && $pelayanan->totaldibayar != null) {
+            return (float)$pelayanan->totaldibayar;
+        } else {
             return 0;
         }
 
 
     }
-    protected function getDepositPasien($noregistrasi){
+
+    protected function getDepositPasien($noregistrasi)
+    {
         $produkIdDeposit = $this->getProdukIdDeposit();
         $deposit = 0;
-        $pasienDaftar  = PasienDaftar::has('pelayanan_pasien')->where('noregistrasi', $noregistrasi)->first();
-        if($pasienDaftar){
-            $depositList =$pasienDaftar->pelayanan_pasien()->where('nilainormal', '-1')->whereNull('strukfk')->get();
-            foreach ($depositList as $item){
-                if($item->produkfk==$produkIdDeposit){
+        $pasienDaftar = PasienDaftar::has('pelayanan_pasien')->where('noregistrasi', $noregistrasi)->first();
+        if ($pasienDaftar) {
+            $depositList = $pasienDaftar->pelayanan_pasien()->where('nilainormal', '-1')->whereNull('strukfk')->get();
+            foreach ($depositList as $item) {
+                if ($item->produkfk == $produkIdDeposit) {
                     $deposit = $deposit + $item->hargasatuan;
                 }
             }
         }
         return $deposit;
     }
-    public function  getDataDashboard($r){
+
+    public function getDataDashboard($r)
+    {
         $colors = $this->getColor();
         $tglakhir = date('Y-m-d');
         $tglawal = Carbon::now()->subWeek(1)->format('Y-m-d');
-        if(isset($r['tglawal'])){
+        if (isset($r['tglawal'])) {
             $tglawal = $r['tglawal'];
         }
-        if(isset($r['tglakhir'])){
+        if (isset($r['tglakhir'])) {
             $tglakhir = $r['tglakhir'];
         }
 
@@ -3310,10 +3460,10 @@ count(case when x.departemen = 'rahab_medik' then 1 end) AS rehab_medik
 //            */
 //            ) as x
 //            group by x.rangeumur"));
-            $kddiagnosa = '';
-            if (count($data) > 0) {
-                $kddiagnosa = $data[0]->kddiagnosa;
-                $map = \DB::select(DB::raw("
+        $kddiagnosa = '';
+        if (count($data) > 0) {
+            $kddiagnosa = $data[0]->kddiagnosa;
+            $map = \DB::select(DB::raw("
 					select * from (select count(x.provinsi) as jumlah,x.provinsi,x.kdmap
 					from (
 					select pm.kddiagnosa,pm.namadiagnosa,ps.namapasien,al.alamatlengkap,
@@ -3328,7 +3478,7 @@ count(case when x.departemen = 'rahab_medik' then 1 end) AS rehab_medik
 
 					) as x GROUP BY x.provinsi,x.kdmap) as z
 					order by z.jumlah desc "));
-            }
+        }
 
         $result['listdiagnosa'] = $data;
         $result['map'] = $map;
@@ -3340,8 +3490,10 @@ count(case when x.departemen = 'rahab_medik' then 1 end) AS rehab_medik
 //        return view('dashboard.pelayanan', compact('data', 'map', 'kddiagnosa', 'umur'));
 
     }
-    public  static function getColor(){
-        $colors =  [
+
+    public static function getColor()
+    {
+        $colors = [
             "#FF6384", "#4BC0C0", "#FFCE56",
             "#ffff9c", "#36A2EB", '#7cb5ec', '#75b2a3', '#9ebfcc', '#acdda8', '#d7f4d2', '#ccf2e8',
             '#468499', '#088da5', '#00ced1', '#3399ff', '#00ff7f',
@@ -3352,81 +3504,85 @@ count(case when x.departemen = 'rahab_medik' then 1 end) AS rehab_medik
         return $colors;
     }
 
-    public function showDataPegawai(Request $r){
+    public function showDataPegawai(Request $r)
+    {
         $listJk = DB::table('jeniskelamin_m')
             ->select('*')
-            ->where('statusenabled',true)
+            ->where('statusenabled', true)
             ->get();
         $listJP = DB::table('jenispegawai_m')
             ->select('*')
-            ->where('statusenabled',true)
+            ->where('statusenabled', true)
             ->orderBy('jenispegawai')
             ->get();
         $listPangkat = DB::table('pangkat_m')
             ->select('*')
-            ->where('statusenabled',true)
+            ->where('statusenabled', true)
             ->orderBy('pangkat')
             ->get();
         $listPdd = DB::table('pendidikan_m')
             ->select('*')
-            ->where('statusenabled',true)
+            ->where('statusenabled', true)
             ->orderBy('pendidikan')
             ->get();
         $listJB = DB::table('jabatan_m')
             ->select('*')
-            ->where('statusenabled',true)
+            ->where('statusenabled', true)
             ->orderBy('jabatan')
             ->get();
 
-        if(isset($r->id) && $r->id != null){
+        if (isset($r->id) && $r->id != null) {
             $valueEdit = DB::table('pegawai_m as pg')
-                ->leftJoin('jeniskelamin_m as jk','jk.id','pg.objectjeniskelaminfk')
-                ->leftJoin('jabatan_m as jb','jb.id','pg.objectjabatanfk')
-                ->leftJoin('pendidikan_m as pdd','pdd.id','pg.objectpendidikanfk')
-                ->leftJoin('pangkat_m as pn','pn.id','pg.objectpangkatfk')
-                ->leftJoin('jenispegawai_m as jp','jp.id','pg.objectjenispegawaifk')
-                ->select('pg.*','jk.jeniskelamin','jb.jabatan','pdd.pendidikan','pn.pangkat','jp.jenispegawai')
-                ->where('pg.id',$r->id)
+                ->leftJoin('jeniskelamin_m as jk', 'jk.id', 'pg.objectjeniskelaminfk')
+                ->leftJoin('jabatan_m as jb', 'jb.id', 'pg.objectjabatanfk')
+                ->leftJoin('pendidikan_m as pdd', 'pdd.id', 'pg.objectpendidikanfk')
+                ->leftJoin('pangkat_m as pn', 'pn.id', 'pg.objectpangkatfk')
+                ->leftJoin('jenispegawai_m as jp', 'jp.id', 'pg.objectjenispegawaifk')
+                ->select('pg.*', 'jk.jeniskelamin', 'jb.jabatan', 'pdd.pendidikan', 'pn.pangkat', 'jp.jenispegawai')
+                ->where('pg.id', $r->id)
                 ->first();
 //            dd($valueEdit);
-            return view('module.user.pegawai.assets.add-pegawai',compact('valueEdit',
-                'listJk','listJB','listPdd','listPangkat','listJP'));
-        }else{
-            return view('module.user.pegawai.assets.add-pegawai',compact('r',
-                'listJk','listJB','listPdd','listPangkat','listJP'));
+            return view('module.user.pegawai.assets.add-pegawai', compact('valueEdit',
+                'listJk', 'listJB', 'listPdd', 'listPangkat', 'listJP'));
+        } else {
+            return view('module.user.pegawai.assets.add-pegawai', compact('r',
+                'listJk', 'listJB', 'listPdd', 'listPangkat', 'listJP'));
         }
     }
-    public function hapusPegawai (Request $r)
+
+    public function hapusPegawai(Request $r)
     {
         DB::beginTransaction();
         try {
 
-            Pegawai::where('id',$r['id'])->delete();
+            Pegawai::where('id', $r['id'])->delete();
             DB::commit();
-            session()->flash('type',"success");
-            session()->flash('message','Data berhasil dihapus');
+            session()->flash('type', "success");
+            session()->flash('message', 'Data berhasil dihapus');
         } catch (\Exception $e) {
             DB::rollback();
-            session()->flash('type',"error");
-            session()->flash('message','Data gagal dihapus');
+            session()->flash('type', "error");
+            session()->flash('message', 'Data gagal dihapus');
         }
 
-        return redirect()->route("show_page",["role"=>$_SESSION["role"],"pages"=>"pegawai"]);
+        return redirect()->route("show_page", ["role" => $_SESSION["role"], "pages" => "pegawai"]);
 
     }
-    public function savePegawai (Request $r){
+
+    public function savePegawai(Request $r)
+    {
         DB::beginTransaction();
         try {
 //            dd($r->input());
-            $profile = DB::table('user_m')->where('id',$_SESSION['id'])->first();
+            $profile = DB::table('user_m')->where('id', $_SESSION['id'])->first();
 //            dd($profile);
             $data = $r->input();
-            if( $data['id'] == null ) {
+            if ($data['id'] == null) {
                 $saveData = new Pegawai();
                 $saveData->id = Pegawai::max('id') + 1;
                 $saveData->statusenabled = true;
-            }else{
-                $saveData =  Pegawai::where('id',$data['id'])->first();
+            } else {
+                $saveData = Pegawai::where('id', $data['id'])->first();
             }
             $saveData->profilefk = $profile->profilefk;
             $saveData->namalengkap = $data['namalengkap'];
@@ -3444,312 +3600,325 @@ count(case when x.departemen = 'rahab_medik' then 1 end) AS rehab_medik
             $saveData->save();
 
             DB::commit();
-            session()->flash('type',"success");
-            session()->flash('message','Data berhasil disimpan');
+            session()->flash('type', "success");
+            session()->flash('message', 'Data berhasil disimpan');
         } catch (\Exception $e) {
             DB::rollback();
-            session()->flash('type',"error");
-            session()->flash('message','Data gagal disimpan');
+            session()->flash('type', "error");
+            session()->flash('message', 'Data gagal disimpan');
         }
 
-        return redirect()->route("show_page",["role"=>$_SESSION["role"],"pages"=>"pegawai"]);
+        return redirect()->route("show_page", ["role" => $_SESSION["role"], "pages" => "pegawai"]);
 
     }
-    public function showDataBed(Request $r){
+
+    public function showDataBed(Request $r)
+    {
 
         $listKelas = DB::table('kelas_m')
             ->select('*')
-            ->where('statusenabled',true)
+            ->where('statusenabled', true)
             ->orderBy('namakelas')
             ->get();
 
-        if(isset($r['id']) && $r['id'] != null){
+        if (isset($r['id']) && $r['id'] != null) {
             $valueEdit = DB::table('ketersediaantempattidur_t as pg')
-                ->join('kelas_m as jk','jk.id','pg.objectkelasfk')
-                ->Join('profile_m as pr','pr.id','pg.profilefk')
-                ->select('pg.*','jk.namakelas','pr.namaprofile')
-                ->where('pg.norec',$r['id'] )
+                ->join('kelas_m as jk', 'jk.id', 'pg.objectkelasfk')
+                ->Join('profile_m as pr', 'pr.id', 'pg.profilefk')
+                ->select('pg.*', 'jk.namakelas', 'pr.namaprofile')
+                ->where('pg.norec', $r['id'])
                 ->first();
 
 //            dd($valueEdit);
-            return view('module.user.bed.assets.add-bed',compact('valueEdit',
+            return view('module.user.bed.assets.add-bed', compact('valueEdit',
                 'listKelas'));
-        }else{
-            return view('module.user.bed.assets.add-bed',compact('listKelas'));
+        } else {
+            return view('module.user.bed.assets.add-bed', compact('listKelas'));
         }
     }
-    public function hapusBed (Request $r)
+
+    public function hapusBed(Request $r)
     {
         DB::beginTransaction();
         try {
 
-            DB::table('ketersediaantempattidur_t')->where('norec',$r['id'])->delete();
+            DB::table('ketersediaantempattidur_t')->where('norec', $r['id'])->delete();
 //            session()->flash('message',"Incorrect username or password");
             toastr()->success('Data Delete Succesfully !', 'Info');
             DB::commit();
-            session()->flash('type',"success");
-            session()->flash('message','Data berhasil dihapus');
+            session()->flash('type', "success");
+            session()->flash('message', 'Data berhasil dihapus');
         } catch (\Exception $e) {
             DB::rollback();
-            session()->flash('type',"error");
-            session()->flash('message','Data gagal dihapus');
+            session()->flash('type', "error");
+            session()->flash('message', 'Data gagal dihapus');
         }
 
-        return redirect()->route("show_page",["role"=>$_SESSION["role"],"pages"=>"bed"]);
+        return redirect()->route("show_page", ["role" => $_SESSION["role"], "pages" => "bed"]);
 
     }
-    public function saveBed (Request $r){
+
+    public function saveBed(Request $r)
+    {
         DB::beginTransaction();
         try {
 //            dd($r->input());
-            $profile = DB::table('user_m')->where('id',$_SESSION['id'])->first();
+            $profile = DB::table('user_m')->where('id', $_SESSION['id'])->first();
 //            dd($profile);
             $data = $r->input();
 
-            if( $data['id'] == null  ) {
-                $cekData =  DB::table('ketersediaantempattidur_t')
-                    ->where('objectkelasfk',$data['kelas'])
-                    ->where('profilefk',$profile->profilefk)
+            if ($data['id'] == null) {
+                $cekData = DB::table('ketersediaantempattidur_t')
+                    ->where('objectkelasfk', $data['kelas'])
+                    ->where('profilefk', $profile->profilefk)
                     ->first();
-                if(empty($cekData)){
+                if (empty($cekData)) {
 //                    $max =  DB::table('ketersediaantempattidur_t')->max('id');
                     DB::table('ketersediaantempattidur_t')->insert([
-                        "norec"=> substr(Uuid::generate(), 0, 32),
-                        "statusenabled"=> true,
-                        "objectkelasfk"=> $data['kelas'],
-                        "profilefk"=> $profile->profilefk,
+                        "norec" => substr(Uuid::generate(), 0, 32),
+                        "statusenabled" => true,
+                        "objectkelasfk" => $data['kelas'],
+                        "profilefk" => $profile->profilefk,
                         "kapasitas" => $data['kapasitas'],
                         "tersedia" => $data['tersedia'],
                         "tglupdate" => date('Y-m-d H:i:s')
                     ]);
-                }else{
-                     DB::table('ketersediaantempattidur_t')->where('norec',$cekData->norec)
-                         ->update([
-                             "objectkelasfk"=> $data['kelas'],
-                             "profilefk"=> $profile->profilefk,
-                             "kapasitas" =>  $data['kapasitas'],
-                             "tersedia" => $data['tersedia'],
-                             "tglupdate" => date('Y-m-d H:i:s')
-                         ]);
+                } else {
+                    DB::table('ketersediaantempattidur_t')->where('norec', $cekData->norec)
+                        ->update([
+                            "objectkelasfk" => $data['kelas'],
+                            "profilefk" => $profile->profilefk,
+                            "kapasitas" => $data['kapasitas'],
+                            "tersedia" => $data['tersedia'],
+                            "tglupdate" => date('Y-m-d H:i:s')
+                        ]);
                 }
-            }else{
+            } else {
                 DB::table('ketersediaantempattidur_t')
-                    ->where('norec',$data['id'] )
+                    ->where('norec', $data['id'])
                     ->update([
-                    "objectkelasfk"=> $data['kelas'],
-                    "profilefk"=>$profile->profilefk,
-                    "kapasitas" =>  $data['kapasitas'],
-                    "tersedia" => $data['tersedia'],
-                    "tglupdate" => date('Y-m-d H:i:s')
-                ]);
+                        "objectkelasfk" => $data['kelas'],
+                        "profilefk" => $profile->profilefk,
+                        "kapasitas" => $data['kapasitas'],
+                        "tersedia" => $data['tersedia'],
+                        "tglupdate" => date('Y-m-d H:i:s')
+                    ]);
             }
             DB::commit();
-            session()->flash('type',"success");
-            session()->flash('message','Data berhasil disimpan');
+            session()->flash('type', "success");
+            session()->flash('message', 'Data berhasil disimpan');
         } catch (\Exception $e) {
             DB::rollback();
-            session()->flash('type',"error");
-            session()->flash('message','Data gagal disimpan');
+            session()->flash('type', "error");
+            session()->flash('message', 'Data gagal disimpan');
         }
 
-        return redirect()->route("show_page",["role"=>$_SESSION["role"],"pages"=>"bed"]);
+        return redirect()->route("show_page", ["role" => $_SESSION["role"], "pages" => "bed"]);
 
     }
-    public function showDataStok(Request $r){
+
+    public function showDataStok(Request $r)
+    {
 
         $listProduk = DB::table('produk_m')
             ->select('*')
-            ->where('statusenabled',true)
+            ->where('statusenabled', true)
             ->orderBy('namaproduk')
             ->get();
         $listSatuan = DB::table('satuanstandar_m')
             ->select('*')
-            ->where('statusenabled',true)
+            ->where('statusenabled', true)
             ->orderBy('satuanstandar')
             ->get();
 
-        if(isset($r['norec']) && $r['norec'] != null){
+        if (isset($r['norec']) && $r['norec'] != null) {
             $valueEdit = DB::table('transaksistok_t as pg')
-                ->join('satuanstandar_m as jk','jk.id','pg.satuanstandarfk')
-                ->Join('produk_m as prd','prd.id','pg.produkfk')
-                ->Join('profile_m as pr','pr.id','pg.profilefk')
-                ->select('pg.*','jk.satuanstandar','prd.namaproduk','pr.namaprofile')
-                ->where('pg.norec',$r['norec'])
+                ->join('satuanstandar_m as jk', 'jk.id', 'pg.satuanstandarfk')
+                ->Join('produk_m as prd', 'prd.id', 'pg.produkfk')
+                ->Join('profile_m as pr', 'pr.id', 'pg.profilefk')
+                ->select('pg.*', 'jk.satuanstandar', 'prd.namaproduk', 'pr.namaprofile')
+                ->where('pg.norec', $r['norec'])
                 ->first();
 
 //            dd($valueEdit);
-            return view('module.user.stok.assets.add-stok',compact('valueEdit',
-                'listSatuan','listProduk'));
-        }else{
-            return view('module.user.stok.assets.add-stok',compact('listSatuan','listProduk'));
+            return view('module.user.stok.assets.add-stok', compact('valueEdit',
+                'listSatuan', 'listProduk'));
+        } else {
+            return view('module.user.stok.assets.add-stok', compact('listSatuan', 'listProduk'));
         }
     }
-    public function hapusStok (Request $r)
+
+    public function hapusStok(Request $r)
     {
         DB::beginTransaction();
         try {
 
-            DB::table('transaksistok_t')->where('norec',$r['norec'])->delete();
+            DB::table('transaksistok_t')->where('norec', $r['norec'])->delete();
 //            session()->flash('message',"Incorrect username or password");
             toastr()->success('Data Delete Succesfully !', 'Info');
             DB::commit();
-            session()->flash('type',"success");
-            session()->flash('message','Data berhasil dihapus');
+            session()->flash('type', "success");
+            session()->flash('message', 'Data berhasil dihapus');
         } catch (\Exception $e) {
             DB::rollback();
-            session()->flash('type',"error");
-            session()->flash('message','Data gagal dihapus');
+            session()->flash('type', "error");
+            session()->flash('message', 'Data gagal dihapus');
         }
 
-        return redirect()->route("show_page",["role"=>$_SESSION["role"],"pages"=>"stok"]);
+        return redirect()->route("show_page", ["role" => $_SESSION["role"], "pages" => "stok"]);
 
     }
-    public function saveStok (Request $r){
+
+    public function saveStok(Request $r)
+    {
         DB::beginTransaction();
         try {
 //            dd($r->input());
-            $profile = DB::table('user_m')->where('id',$_SESSION['id'])->first();
+            $profile = DB::table('user_m')->where('id', $_SESSION['id'])->first();
 //            dd($profile);
             $data = $r->input();
 
-            if( $data['norec'] == null  ) {
-                $cekData =  DB::table('transaksistok_t')
-                    ->where('satuanstandarfk',$data['satuanstandar'])
-                    ->where('produkfk',$data['produk'])
-                    ->where('profilefk',$profile->profilefk)
+            if ($data['norec'] == null) {
+                $cekData = DB::table('transaksistok_t')
+                    ->where('satuanstandarfk', $data['satuanstandar'])
+                    ->where('produkfk', $data['produk'])
+                    ->where('profilefk', $profile->profilefk)
                     ->first();
-                if(empty($cekData)){
+                if (empty($cekData)) {
                     DB::table('transaksistok_t')->insert([
-                        "norec"=> substr(Uuid::generate(), 0, 32),
-                        "statusenabled"=> true,
-                        "produkfk"=> $data['produk'],
-                        "profilefk"=> $profile->profilefk,
+                        "norec" => substr(Uuid::generate(), 0, 32),
+                        "statusenabled" => true,
+                        "produkfk" => $data['produk'],
+                        "profilefk" => $profile->profilefk,
                         "satuanstandarfk" => $data['satuanstandar'],
                         "total" => $data['total'],
                         "tglupdate" => date('Y-m-d H:i:s')
                     ]);
-                }else{
-                    DB::table('transaksistok_t')->where('norec',$cekData->norec)
+                } else {
+                    DB::table('transaksistok_t')->where('norec', $cekData->norec)
                         ->update([
-                            "produkfk"=> $data['produk'],
-                            "profilefk"=> $profile->profilefk,
+                            "produkfk" => $data['produk'],
+                            "profilefk" => $profile->profilefk,
                             "satuanstandarfk" => $data['satuanstandar'],
                             "total" => $data['total'],
                             "tglupdate" => date('Y-m-d H:i:s')
                         ]);
                 }
-            }else{
+            } else {
                 DB::table('transaksistok_t')
-                    ->where('norec',$data['norec'] )
+                    ->where('norec', $data['norec'])
                     ->update([
-                        "produkfk"=> $data['produk'],
-                        "profilefk"=> $profile->profilefk,
+                        "produkfk" => $data['produk'],
+                        "profilefk" => $profile->profilefk,
                         "satuanstandarfk" => $data['satuanstandar'],
                         "total" => $data['total'],
                         "tglupdate" => date('Y-m-d H:i:s')
                     ]);
             }
             DB::commit();
-            session()->flash('type',"success");
-            session()->flash('message','Data berhasil disimpan');
+            session()->flash('type', "success");
+            session()->flash('message', 'Data berhasil disimpan');
         } catch (\Exception $e) {
             DB::rollback();
-            session()->flash('type',"error");
-            session()->flash('message','Data gagal disimpan');
+            session()->flash('type', "error");
+            session()->flash('message', 'Data gagal disimpan');
         }
 
-        return redirect()->route("show_page",["role"=>$_SESSION["role"],"pages"=>"stok"]);
+        return redirect()->route("show_page", ["role" => $_SESSION["role"], "pages" => "stok"]);
 
     }
+
     public function saveECG(Request $r)
     {
-        $req =  $r->getContent();
-        $req = str_replace('[ECG SERVER V1.0]','',$req);
-        $req = str_replace('as@epic=##$ECG','',$req);
-        $req = str_replace('~','',$req);
+        $req = $r->getContent();
+        $req = str_replace('[ECG SERVER V1.0]', '', $req);
+        $req = str_replace('as@epic=##$ECG', '', $req);
+        $req = str_replace('~', '', $req);
 
         $xml = simplexml_load_string($req, "SimpleXMLElement", LIBXML_NOCDATA);
         $json = json_encode($xml);
-        $array =json_decode($json,TRUE);
-        $uid=  substr(Uuid::generate(), 0, 6);
-        $save =[];
-        $fdata = array_values($array['Data']) ;
+        $array = json_decode($json, TRUE);
+        $uid = substr(Uuid::generate(), 0, 6);
+        $save = [];
+        $fdata = array_values($array['Data']);
         $i = 1;
         for ($x = 0; $x < count($fdata); $x++) {
-            $ket = str_replace('xmlECG','', array_keys($array['Data'])[$x]) ;
-            if($ket !='xmlHeader' && $ket  != 'Data'){
-                if($ket == 'date'){
-                    $ket ='ecgDate';
+            $ket = str_replace('xmlECG', '', array_keys($array['Data'])[$x]);
+            if ($ket != 'xmlHeader' && $ket != 'Data') {
+                if ($ket == 'date') {
+                    $ket = 'ecgDate';
                 }
-                if($ket == 'Time'){
-                    $ket ='ecgTime';
+                if ($ket == 'Time') {
+                    $ket = 'ecgTime';
                 }
-                $save[] =array(
-                    'norec'=> date('YmdHis').$uid.$array['Data']['xmlECGCustomerID'],
+                $save[] = array(
+                    'norec' => date('YmdHis') . $uid . $array['Data']['xmlECGCustomerID'],
                     'kunci' => $ket,
-                    'nilai' =>$fdata[$x],
+                    'nilai' => $fdata[$x],
                     'urut' => $i,
                     'customerid' => $array['Data']['xmlECGCustomerID'],
-                    'datesend' => $array['Data']['xmlECGdate'].' '.$array['Data']['xmlECGTime']
+                    'datesend' => $array['Data']['xmlECGdate'] . ' ' . $array['Data']['xmlECGTime']
                 );
                 $i++;
             }
         }
-        $save[] =array(
-            'norec'=> date('YmdHis').$uid.$array['Data']['xmlECGCustomerID'],
+        $save[] = array(
+            'norec' => date('YmdHis') . $uid . $array['Data']['xmlECGCustomerID'],
             'kunci' => 'expertise',
-            'nilai' =>'',
+            'nilai' => '',
             'urut' => 10,
             'customerid' => $array['Data']['xmlECGCustomerID'],
-            'datesend' => $array['Data']['xmlECGdate'].' '.$array['Data']['xmlECGTime']
+            'datesend' => $array['Data']['xmlECGdate'] . ' ' . $array['Data']['xmlECGTime']
         );
 
-        $frame = array_values($array['Data']['xmlECGData']) ;
+        $frame = array_values($array['Data']['xmlECGData']);
         for ($x = 0; $x < count($frame); $x++) {
-            $save[] =array(
-                'norec'=> date('YmdHis').$uid.$array['Data']['xmlECGCustomerID'],
+            $save[] = array(
+                'norec' => date('YmdHis') . $uid . $array['Data']['xmlECGCustomerID'],
                 'kunci' => 'xmlframe',
                 'nilai' => $frame[$x],
                 'urut' => 20 + $x,
                 'customerid' => $array['Data']['xmlECGCustomerID'],
-                'datesend' => $array['Data']['xmlECGdate'].' '.$array['Data']['xmlECGTime']
+                'datesend' => $array['Data']['xmlECGdate'] . ' ' . $array['Data']['xmlECGTime']
             );
         }
 //        DB::beginTransaction();
 //        try{
 //        return $save;
-            foreach ($save as $s){
-                $ecg = new EECG();
-                $ecg->norec = $s['norec'];
-    //        $ecg->kdprofile = $array;
-    //        $ecg->statusenabled = $array;
-    //        $ecg->kodeexternal = $array;
-    //        $ecg->namaexternal = $array;
-                $ecg->reportdisplay = 'laravel';
-                $ecg->kunci = $s['kunci'];
-                $ecg->nilai = $s['nilai'];
-                $ecg->urut = $s['urut'];
-                $ecg->customerid =$s['customerid'];
+        foreach ($save as $s) {
+            $ecg = new EECG();
+            $ecg->norec = $s['norec'];
+            //        $ecg->kdprofile = $array;
+            //        $ecg->statusenabled = $array;
+            //        $ecg->kodeexternal = $array;
+            //        $ecg->namaexternal = $array;
+            $ecg->reportdisplay = 'laravel';
+            $ecg->kunci = $s['kunci'];
+            $ecg->nilai = $s['nilai'];
+            $ecg->urut = $s['urut'];
+            $ecg->customerid = $s['customerid'];
 //                $ecg->dateverif = $array;
-                $ecg->datesend =$s['datesend'];
-                $ecg->save();
-            }
+            $ecg->datesend = $s['datesend'];
+            $ecg->save();
+        }
 //            DB::commit();
-             $result = array("response"=>'ECG',
-                 "metadata"=>
-                     array(
-                         "code" => "200",
-                         "message" => "Sukses")
-             );
-            return response()->json($result);
+        $result = array("response" => 'ECG',
+            "metadata" =>
+                array(
+                    "code" => "200",
+                    "message" => "Sukses")
+        );
+        return response()->json($result);
 
 //        } catch (\Exception $e) {
 //            DB::rollBack();
 //            return response()->json($e);
 //        }
     }
-    public function tesPost(Request $request){
-        $mg['message'] ='Sukses';
+
+    public function tesPost(Request $request)
+    {
+        $mg['message'] = 'Sukses';
         return $this->setStatusCode('200')->respond($mg);
     }
 }

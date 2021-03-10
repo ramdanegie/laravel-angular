@@ -16,7 +16,8 @@ a:focus {
   background: #d5dae6; }
 .pcoded .pcoded-header {
   display: block;
-  height: 35px;
+  /*height: 35px;*/
+    height: 70px;
   background: #e9ecf3;
   color: #414141;
   width: 100%;

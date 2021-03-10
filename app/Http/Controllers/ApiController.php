@@ -25,6 +25,7 @@ class ApiController extends Controller
             $this->middleware('auth.token');
             $this->current_user = (object)\Session::get('userData');
         }
+
     }
     public function validate_input($data)
     {

@@ -1,0 +1,87 @@
+
+     <!-- Data Table Css -->
+       <link rel="stylesheet" type="text/css" href="{{ asset('comp\bower_components\datatables.net-bs4\css\dataTables.bootstrap4.min.css') }}">
+       <link rel="stylesheet" type="text/css" href="{{ asset('comp\assets\pages\data-table\css\buttons.dataTables.min.css') }}">
+       <link rel="stylesheet" type="text/css" href="{{ asset('comp\bower_components\datatables.net-responsive-bs4\css\responsive.bootstrap4.min.css') }}">
+
+       <!-- Syntax highlighter Prism css -->
+       <link rel="stylesheet" type="text/css" href="{{ asset('comp\assets\pages\prism\prism.css') }}">
+       <!-- jpro forms css -->
+       <link rel="stylesheet" type="text/css" href="{{ asset('comp\assets\pages\j-pro\css\demo.css') }}">
+       <link rel="stylesheet" type="text/css" href="{{ asset('comp\assets\pages\j-pro\css\font-awesome.min.css') }}">
+       <link rel="stylesheet" type="text/css" href="{{ asset('comp\assets\pages\j-pro\css\j-pro-modern.css') }}">
+       <!-- Sweetalert Css -->
+       <link href="{{ asset('comp/assets/vendors/sweetalert/sweetalert.css') }}" rel="stylesheet"/>
+         <!-- Date-range picker css  -->
+           <link rel="stylesheet" type="text/css" href="{{ asset('comp\bower_components\bootstrap-daterangepicker\css\daterangepicker.css') }}">
+           <!-- Date-Dropper css -->
+           <link rel="stylesheet" type="text/css" href="{{ asset('comp\bower_components\datedropper\css\datedropper.min.css') }}">
+           <!-- Color Picker css -->
+           <link rel="stylesheet" type="text/css" href="{{ asset('comp\bower_components\spectrum\css\spectrum.css') }}">
+           <!-- Mini-color css -->
+           <link rel="stylesheet" type="text/css" href="{{ asset('comp\bower_components\jquery-minicolors\css\jquery.minicolors.css') }}">
+           <!-- radial chart -->
+           <link rel="stylesheet" href="{{ asset('comp\assets\pages\chart\radial\css\radial.css') }}" type="text/css" media="all">
+{{--    <link href="{!! asset('css/font-roboto.css') !!}" rel='stylesheet' type='text/css'>--}}
+{{--    <link href="{!! asset('css/font-material.css') !!}" rel='stylesheet' type='text/css'>--}}
+{{--    <script type="text/javascript" src="{{ asset('comp/assets/pages/advance-elements/moment-with-locales.min.js') }}"></script>--}}
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.5.10/css/ripples.min.css"/>
+   <link rel="stylesheet" href="{{ asset('css/styleAdminLte.css') }}">
+    <link href="{{ asset('css/jquery-jvectormap-2.0.5.css') }}" rel="stylesheet">
+
+
+    <!-- Date-time picker css -->
+{{--    <link rel="stylesheet" type="text/css" href="{{ asset('comp\assets\pages\advance-elements\css\bootstrap-datetimepicker.css') }}">--}}
+
+    <!-- Style.css -->
+{{--    <link rel="stylesheet" type="text/css" href="{{ asset('comp\assets\pages\j-pro\css\j-forms.css') }}">--}}
+{{--    <link rel="stylesheet" href="{{ asset('comp\assets\css\bootstrapValidator.min.css') }}"/>--}}
+
+{{--    <script type="text/javascript" src="{!! asset('js/bootstrap-material-datetimepicker.js') !!}"></script>--}}
+=---------------
+
+
+
+    <!-- Date-range picker js -->
+{{--    <script type="text/javascript" src="{{ asset('comp/bower_components/bootstrap-daterangepicker/js/daterangepicker.js') }}"></script>--}}
+    <!-- Mini-color js -->
+{{--    <script type="text/javascript" src="{{ asset('comp/bower_components/jquery-minicolors/js/jquery.minicolors.min.js') }}"></script>--}}
+
+    <!-- modernizr js -->
+{{--    <script type="text/javascript" src="{{ asset('comp/bower_components/modernizr/js/modernizr.js') }}"></script>--}}
+{{--    <script type="text/javascript" src="{{ asset('comp/bower_components/modernizr/js/css-scrollbars.js') }}"></script>--}}
+
+{{--    <script src="{{ asset('comp/bower_components/datatables.net/js/jquery.dataTables.min.js') }}"></script>--}}
+{{--    <script src="{{ asset('comp/bower_components/datatables.net-buttons/js/dataTables.buttons.min.js') }}"></script>--}}
+{{--    <script src="{{ asset('comp/bower_components/datatables.net-bs4/js/dataTables.bootstrap4.min.js') }}"></script>--}}
+{{--    <script src="{{ asset('comp/bower_components/datatables.net-responsive/js/dataTables.responsive.min.js') }}"></script>--}}
+{{--    <script src="{{ asset('comp/bower_components/datatables.net-responsive-bs4/js/responsive.bootstrap4.min.js') }}"></script>--}}
+{{--    <script src="{{ asset('js/jvectormap/jquery-jvectormap-2.0.5.min.js') }}"></script>--}}
+{{--    <script src="{{ asset('js/jvectormap/jquery-jvectormap-world-mill-en.js') }}"></script>--}}
+    {{--    <script type="text/javascript" src="{{ asset('adminty\files\assets\js\script.js') }}"></script>--}}
+    <!--    <script src="https://code.highcharts.com/highcharts.js"></script>-->
+    <!--    <script src="https://code.highcharts.com/modules/drilldown.js"></script>-->
+
+    <!-- j-pro js -->
+    <script type="text/javascript" src="{{ asset('comp/assets/pages/j-pro/js/jquery.ui.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('comp/assets/pages/j-pro/js/jquery.maskedinput.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('comp/assets/pages/j-pro/js/jquery.j-pro.js') }}"></script>
+<script src="https://cdn.ckeditor.com/ckeditor5/15.0.0/classic/ckeditor.js"></script>
+<!-- SweetAlert Plugin Js -->
+<script src="{{ asset('comp\assets/vendors/sweetalert/sweetalert.min.js') }}"></script>
+
+<script type="text/javascript" src="{{ asset('comp/bower_components/chart.js/js/Chart.js') }}"></script>
+<script src="{{ asset('js/highchart.js') }}"></script>
+<script src="{{ asset('js/drilldown.js') }}"></script>
+<!-- i18next.min.js -->
+<script type="text/javascript" src="{{ asset('comp\bower_components/i18next/js/i18next.min.js') }}"></script>
+<script type="text/javascript" src="{{ asset('comp/bower_components/i18next-xhr-backend/js/i18nextXHRBackend.min.js') }}"></script>
+<script type="text/javascript" src="{{ asset('comp/bower_components/i18next-browser-languagedetector/js/i18nextBrowserLanguageDetector.min.js') }}"></script>
+<script type="text/javascript" src="{{ asset('comp/bower_components/jquery-i18next/js/jquery-i18next.min.js') }}"></script>
+    <!-- Date-dropper js -->
+    <script type="text/javascript" src="{{ asset('comp/bower_components/datedropper/js/datedropper.min.js') }}"></script>
+
+    <!-- Color picker js -->
+    <script type="text/javascript" src="{{ asset('comp/bower_components/spectrum/js/spectrum.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('comp/bower_components/jscolor/js/jscolor.js') }}"></script>

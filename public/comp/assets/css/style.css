@@ -1,11 +1,4 @@
-body {
-    background-color: #f3f3f3;
-    font-size: .875em;
-    overflow-x: hidden;
-    color: #353c4e;
-    font-family: "Tahoma", sans-serif;
-    background-attachment: fixed
-}
+
 
 ul {
     padding-left: 0;
@@ -52,11 +45,11 @@ p {
     padding-right: 20px
 }
 
-.main-body .page-wrapper {
-    padding: 1.8rem;
-    -webkit-transition: all ease-in 0.3s;
-    transition: all ease-in 0.3s
-}
+/*.main-body .page-wrapper {*/
+/*    padding: 1.8rem;*/
+/*    -webkit-transition: all ease-in 0.3s;*/
+/*    transition: all ease-in 0.3s*/
+/*}*/
 
 .main-body .page-wrapper .menu-rtl .page-header-title i {
     margin-left: 20px
@@ -7654,7 +7647,7 @@ table tbody .border-bottom-info td {
     position: relative;
     -webkit-box-align: center;
     -ms-flex-align: center;
-    align-items: center;
+    /*align-items: center;*/
     display: -webkit-box;
     display: -ms-flexbox;
     display: flex;
